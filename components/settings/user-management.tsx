@@ -1,0 +1,277 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Users, UserPlus, MoreHorizontal, Edit, Trash2, Shield } from "lucide-react"
+
+interface User {
+  id: string
+  email: string
+  name: string
+  role: string
+  department: string
+  status: string
+  last_login: string
+  created_at: string
+}
+
+export function UserManagement() {
+  const [users, setUsers] = useState<User[]>([])
+  const [showAddUser, setShowAddUser] = useState(false)
+  const [newUser, setNewUser] = useState({
+    email: "",
+    name: "",
+    role: "",
+    department: "",
+  })
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      // Mock data - replace with actual API call
+      const mockUsers: User[] = [
+        {
+          id: "1",
+          email: "admin@mobiazores.com",
+          name: "System Admin",
+          role: "admin",
+          department: "IT",
+          status: "active",
+          last_login: "2024-01-15 10:30:00",
+          created_at: "2024-01-01",
+        },
+        {
+          id: "2",
+          email: "manager@mobiazores.com",
+          name: "Fleet Manager",
+          role: "fleet_manager",
+          department: "Transport",
+          status: "active",
+          last_login: "2024-01-15 09:15:00",
+          created_at: "2024-01-02",
+        },
+        {
+          id: "3",
+          email: "tech@mobiazores.com",
+          name: "Maintenance Tech",
+          role: "maintenance_tech",
+          department: "Maintenance",
+          status: "active",
+          last_login: "2024-01-14 16:45:00",
+          created_at: "2024-01-03",
+        },
+      ]
+      setUsers(mockUsers)
+    } catch (error) {
+      console.error("Error fetching users:", error)
+    }
+  }
+
+  const handleCreateUser = async () => {
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      })
+
+      if (response.ok) {
+        fetchUsers()
+        setShowAddUser(false)
+        setNewUser({ email: "", name: "", role: "", department: "" })
+      }
+    } catch (error) {
+      console.error("Error creating user:", error)
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user?")) return
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        setUsers((prev) => prev.filter((u) => u.id !== userId))
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error)
+    }
+  }
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "destructive"
+      case "fleet_manager":
+        return "default"
+      case "maintenance_tech":
+        return "secondary"
+      default:
+        return "outline"
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              User Management
+            </CardTitle>
+            <Button onClick={() => setShowAddUser(true)} className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Add User
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Last Login</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={getRoleBadgeVariant(user.role) as any}>{user.role}</Badge>
+                  </TableCell>
+                  <TableCell>{user.department}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.status === "active" ? "default" : "secondary"}>{user.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{user.last_login}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit User
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Shield className="mr-2 h-4 w-4" />
+                          Reset Password
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete User
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {showAddUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New User</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="user-name">Full Name</Label>
+                <Input
+                  id="user-name"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="user-email">Email</Label>
+                <Input
+                  id="user-email"
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser((prev) => ({ ...prev, email: e.target.value }))}
+                  placeholder="john@example.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="user-role">Role</Label>
+                <Select
+                  value={newUser.role}
+                  onValueChange={(value) => setNewUser((prev) => ({ ...prev, role: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="fleet_manager">Fleet Manager</SelectItem>
+                    <SelectItem value="maintenance_tech">Maintenance Tech</SelectItem>
+                    <SelectItem value="driver">Driver</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="user-department">Department</Label>
+                <Select
+                  value={newUser.department}
+                  onValueChange={(value) => setNewUser((prev) => ({ ...prev, department: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Transport">Transport</SelectItem>
+                    <SelectItem value="Maintenance">Maintenance</SelectItem>
+                    <SelectItem value="Administration">Administration</SelectItem>
+                    <SelectItem value="IT">IT</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAddUser(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateUser}>Create User</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
