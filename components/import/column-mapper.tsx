@@ -7,35 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircleIcon, AlertCircleIcon, MapIcon } from "lucide-react"
-
-interface CSVData {
-  headers: string[]
-  rows: string[][]
-  fileName: string
-  fileSize: number
-}
-
-interface ColumnMapping {
-  [csvColumn: string]: string | null
-}
+import { importService } from "@/lib/import-service"
+import type { CSVData, ColumnMapping, DatabaseField } from "@/types"
+import { DATABASE_FIELDS } from "@/types"
 
 interface ColumnMapperProps {
   csvData: CSVData
   onMappingComplete: (mapping: ColumnMapping) => void
 }
-
-const DATABASE_FIELDS = [
-  { id: "vehicle.internal_number", label: "Vehicle Internal Number", required: true, type: "string" },
-  { id: "vehicle.license_plate", label: "License Plate", required: true, type: "string" },
-  { id: "refuel.date", label: "Refuel Date", required: true, type: "date" },
-  { id: "refuel.liters", label: "Liters", required: true, type: "number" },
-  { id: "refuel.odometer_reading", label: "Odometer Reading", required: true, type: "number" },
-  { id: "driver.name", label: "Driver Name", required: false, type: "string" },
-  { id: "department.name", label: "Department", required: false, type: "string" },
-  { id: "location.name", label: "Location", required: false, type: "string" },
-  { id: "refuel.cost_per_liter", label: "Cost per Liter", required: false, type: "number" },
-  { id: "refuel.notes", label: "Notes", required: false, type: "string" },
-]
 
 export function ColumnMapper({ csvData, onMappingComplete }: ColumnMapperProps) {
   const [mapping, setMapping] = useState<ColumnMapping>({})
@@ -44,34 +23,7 @@ export function ColumnMapper({ csvData, onMappingComplete }: ColumnMapperProps) 
   // Auto-map columns based on common patterns
   useEffect(() => {
     if (!autoMapped) {
-      const autoMapping: ColumnMapping = {}
-
-      csvData.headers.forEach((header) => {
-        const lowerHeader = header.toLowerCase()
-
-        // Auto-mapping patterns
-        if (lowerHeader.includes("interno") || lowerHeader.includes("internal")) {
-          autoMapping[header] = "vehicle.internal_number"
-        } else if (lowerHeader.includes("matrícula") || lowerHeader.includes("plate")) {
-          autoMapping[header] = "vehicle.license_plate"
-        } else if (lowerHeader.includes("data") || lowerHeader.includes("date")) {
-          autoMapping[header] = "refuel.date"
-        } else if (lowerHeader.includes("litros") || lowerHeader.includes("liters")) {
-          autoMapping[header] = "refuel.liters"
-        } else if (lowerHeader.includes("km") || lowerHeader.includes("odometer")) {
-          autoMapping[header] = "refuel.odometer_reading"
-        } else if (lowerHeader.includes("condutor") || lowerHeader.includes("driver")) {
-          autoMapping[header] = "driver.name"
-        } else if (lowerHeader.includes("departamento") || lowerHeader.includes("department")) {
-          autoMapping[header] = "department.name"
-        } else if (lowerHeader.includes("local") || lowerHeader.includes("location")) {
-          autoMapping[header] = "location.name"
-        } else if (lowerHeader.includes("preço") || lowerHeader.includes("price") || lowerHeader.includes("cost")) {
-          autoMapping[header] = "refuel.cost_per_liter"
-        } else if (lowerHeader.includes("notas") || lowerHeader.includes("notes")) {
-          autoMapping[header] = "refuel.notes"
-        }
-      })
+      const autoMapping = importService.autoMapColumns(csvData.headers)
 
       setMapping(autoMapping)
       setAutoMapped(true)

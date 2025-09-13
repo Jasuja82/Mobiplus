@@ -7,150 +7,43 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { EyeIcon, AlertCircleIcon, CheckCircleIcon } from "lucide-react"
-
-interface CSVData {
-  headers: string[]
-  rows: string[][]
-  fileName: string
-  fileSize: number
-}
-
-interface ColumnMapping {
-  [csvColumn: string]: string | null
-}
-
-interface ValidationError {
-  row: number
-  column: string
-  value: string
-  error: string
-}
+import { importService } from "@/lib/import-service"
+import type { CSVData, ColumnMapping, ValidationFlag } from "@/types"
 
 interface DataPreviewProps {
   csvData: CSVData
   columnMapping: ColumnMapping
-  onValidation: (errors: ValidationError[]) => void
+  onValidation: (errors: ValidationFlag[]) => void
 }
 
 export function DataPreview({ csvData, columnMapping, onValidation }: DataPreviewProps) {
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
+  const [validationErrors, setValidationErrors] = useState<ValidationFlag[]>([])
   const [isValidating, setIsValidating] = useState(false)
   const [previewRows, setPreviewRows] = useState(10)
 
-  // Validation rules
-  const validateRow = (row: string[], rowIndex: number): ValidationError[] => {
-    const errors: ValidationError[] = []
-
-    csvData.headers.forEach((header, colIndex) => {
-      const dbField = columnMapping[header]
-      const value = row[colIndex]
-
-      if (!dbField) return
-
-      // Required field validation
-      if (dbField.includes("vehicle.internal_number") && (!value || value.trim() === "")) {
-        errors.push({
-          row: rowIndex,
-          column: header,
-          value,
-          error: "Vehicle internal number is required",
-        })
-      }
-
-      if (dbField.includes("vehicle.license_plate") && (!value || value.trim() === "")) {
-        errors.push({
-          row: rowIndex,
-          column: header,
-          value,
-          error: "License plate is required",
-        })
-      }
-
-      if (dbField.includes("refuel.date")) {
-        if (!value || value.trim() === "") {
-          errors.push({
-            row: rowIndex,
-            column: header,
-            value,
-            error: "Refuel date is required",
-          })
-        } else {
-          // Basic date validation
-          const dateRegex = /^\d{4}-\d{2}-\d{2}$|^\d{2}\/\d{2}\/\d{4}$|^\d{2}-\d{2}\/\d{4}$/
-          if (!dateRegex.test(value)) {
-            errors.push({
-              row: rowIndex,
-              column: header,
-              value,
-              error: "Invalid date format. Use YYYY-MM-DD, DD/MM/YYYY, or DD-MM-YYYY",
-            })
-          }
-        }
-      }
-
-      if (dbField.includes("refuel.liters")) {
-        if (!value || value.trim() === "") {
-          errors.push({
-            row: rowIndex,
-            column: header,
-            value,
-            error: "Liters is required",
-          })
-        } else {
-          const liters = Number.parseFloat(value)
-          if (isNaN(liters) || liters <= 0 || liters > 500) {
-            errors.push({
-              row: rowIndex,
-              column: header,
-              value,
-              error: "Liters must be a number between 0 and 500",
-            })
-          }
-        }
-      }
-
-      if (dbField.includes("refuel.odometer_reading")) {
-        if (!value || value.trim() === "") {
-          errors.push({
-            row: rowIndex,
-            column: header,
-            value,
-            error: "Odometer reading is required",
-          })
-        } else {
-          const odometer = Number.parseInt(value)
-          if (isNaN(odometer) || odometer < 0) {
-            errors.push({
-              row: rowIndex,
-              column: header,
-              value,
-              error: "Odometer reading must be a positive number",
-            })
-          }
-        }
-      }
-    })
-
-    return errors
-  }
-
   // Run validation
   useEffect(() => {
-    setIsValidating(true)
+    const runValidation = async () => {
+      setIsValidating(true)
 
-    const allErrors: ValidationError[] = []
-    csvData.rows.forEach((row, index) => {
-      const rowErrors = validateRow(row, index + 1) // +1 for 1-based row numbering
-      allErrors.push(...rowErrors)
-    })
+      try {
+        const { errors } = await importService.validateData(csvData, columnMapping)
+        setValidationErrors(errors)
+        onValidation(errors)
+      } catch (error) {
+        console.error("Validation error:", error)
+        setValidationErrors([])
+        onValidation([])
+      } finally {
+        setIsValidating(false)
+      }
+    }
 
-    setValidationErrors(allErrors)
-    onValidation(allErrors)
-    setIsValidating(false)
+    runValidation()
   }, [csvData, columnMapping, onValidation])
 
   const getRowErrors = (rowIndex: number) => {
-    return validationErrors.filter((error) => error.row === rowIndex + 1)
+    return validationErrors.filter((error) => error.type.includes(`row_${rowIndex + 1}`))
   }
 
   const getMappedHeaders = () => {
@@ -232,7 +125,7 @@ export function DataPreview({ csvData, columnMapping, onValidation }: DataPrevie
                       {mappedHeaders.map((header, colIndex) => {
                         const originalColIndex = csvData.headers.indexOf(header)
                         const cellValue = row[originalColIndex]
-                        const cellErrors = rowErrors.filter((error) => error.column === header)
+                        const cellErrors = rowErrors.filter((error) => error.message.includes(header))
 
                         return (
                           <TableCell key={header} className={cellErrors.length > 0 ? "text-red-600" : ""}>
@@ -240,7 +133,7 @@ export function DataPreview({ csvData, columnMapping, onValidation }: DataPrevie
                               <div>{cellValue || "-"}</div>
                               {cellErrors.map((error, errorIndex) => (
                                 <div key={errorIndex} className="text-xs text-red-500 mt-1">
-                                  {error.error}
+                                  {error.message}
                                 </div>
                               ))}
                             </div>
@@ -266,10 +159,13 @@ export function DataPreview({ csvData, columnMapping, onValidation }: DataPrevie
           </div>
 
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={() => (window.location.href = "/import?step=1")}>
+            <Button variant="outline" onClick={() => window.history.back()}>
               Back to Mapping
             </Button>
-            <Button disabled={isValidating} onClick={() => (window.location.href = "/import?step=3")}>
+            <Button 
+              disabled={isValidating || validationErrors.filter(e => e.severity === "error").length > 0}
+              onClick={() => onValidation(validationErrors)}
+            >
               Continue to Import
             </Button>
           </div>

@@ -1,109 +1,19 @@
 import { createServerSupabaseClient } from "./supabase"
+import type {
+  Department,
+  Location,
+  Driver,
+  Vehicle,
+  RefuelRecord,
+  MaintenanceRecord,
+  AssignmentType,
+  VehicleWithRelations,
+  RefuelWithRelations,
+  DriverWithRelations
+} from "@/types"
 
-export interface Department {
-  id: string
-  name: string
-  description: string | null
-  budget: number | null
-  manager_id: string | null
-  location_id: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface Location {
-  id: string
-  name: string
-  address: string | null
-  city: string | null
-  region: string | null
-  country: string | null
-  coordinates: any | null
-  internal_number: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface Driver {
-  id: string
-  employee_number: string
-  name: string
-  email: string | null
-  phone: string | null
-  license_number: string | null
-  license_expiry: string | null
-  department_id: string | null
-  status: "active" | "inactive" | "suspended"
-  created_at: string
-  updated_at: string
-  department?: Department
-}
-
-export interface Vehicle {
-  id: string
-  internal_number: string
-  name: string | null
-  license_plate: string
-  make: string | null
-  model: string | null
-  year: number | null
-  fuel_type: "diesel" | "gasoline" | "electric" | "hybrid"
-  tank_capacity: number | null
-  department_id: string | null
-  home_location_id: string | null
-  status: "active" | "inactive" | "maintenance" | "retired"
-  odometer_reading: number
-  created_at: string
-  updated_at: string
-  department?: Department
-  home_location?: Location
-}
-
-export interface RefuelRecord {
-  id: string
-  vehicle_id: string
-  driver_id: string | null
-  location_id: string | null
-  refuel_date: string
-  refuel_time: string | null
-  liters: number
-  cost_per_liter: number | null
-  total_cost: number | null
-  odometer_reading: number
-  distance_since_last: number | null
-  fuel_efficiency: number | null
-  notes: string | null
-  created_at: string
-  updated_at: string
-  vehicle?: Vehicle
-  driver?: Driver
-  location?: Location
-}
-
-export interface MaintenanceRecord {
-  id: string
-  vehicle_id: string
-  maintenance_type: string
-  description: string
-  scheduled_date: string | null
-  completed_date: string | null
-  odometer_reading: number | null
-  cost: number | null
-  technician_name: string | null
-  notes: string | null
-  status: "scheduled" | "in_progress" | "completed" | "cancelled"
-  created_at: string
-  updated_at: string
-  vehicle?: Vehicle
-}
-
-export interface AssignmentType {
-  id: string
-  name: string
-  description: string | null
-  created_at: string
-}
+// Re-export for backward compatibility
+export type { Department, Location, Driver, Vehicle, RefuelRecord, MaintenanceRecord, AssignmentType }
 
 export class DatabaseService {
   private _supabase: ReturnType<typeof createServerSupabaseClient> | null = null
@@ -239,10 +149,10 @@ export class DatabaseService {
     const { data, error } = await query.order("internal_number")
 
     if (error) throw error
-    return data as Vehicle[]
+    return data as VehicleWithRelations[]
   }
 
-  async createVehicle(vehicle: Omit<Vehicle, "id" | "created_at" | "updated_at">) {
+  async createVehicle(vehicle: Omit<Vehicle, "id" | "created_at" | "updated_at">): Promise<VehicleWithRelations> {
     const { data, error } = await this.supabase
       .from("vehicles")
       .insert(vehicle)
@@ -254,7 +164,7 @@ export class DatabaseService {
       .single()
 
     if (error) throw error
-    return data as Vehicle
+    return data as VehicleWithRelations
   }
 
   async getVehicle(id: string) {
@@ -336,10 +246,10 @@ export class DatabaseService {
       .limit(filters?.limit || 100)
 
     if (error) throw error
-    return data as RefuelRecord[]
+    return data as RefuelWithRelations[]
   }
 
-  async createRefuelRecord(record: Omit<RefuelRecord, "id" | "created_at" | "updated_at">) {
+  async createRefuelRecord(record: Omit<RefuelRecord, "id" | "created_at" | "updated_at">): Promise<RefuelWithRelations> {
     const { data, error } = await this.supabase
       .from("refuel_records")
       .insert(record)
@@ -352,14 +262,14 @@ export class DatabaseService {
       .single()
 
     if (error) throw error
-    return data as RefuelRecord
+    return data as RefuelWithRelations
   }
 
-  async bulkCreateRefuelRecords(records: Omit<RefuelRecord, "id" | "created_at" | "updated_at">[]) {
+  async bulkCreateRefuelRecords(records: Omit<RefuelRecord, "id" | "created_at" | "updated_at">[]): Promise<RefuelWithRelations[]> {
     const { data, error } = await this.supabase.from("refuel_records").insert(records).select()
 
     if (error) throw error
-    return data as RefuelRecord[]
+    return data as RefuelWithRelations[]
   }
 
   // Analytics

@@ -10,6 +10,8 @@ import { CSVUploader } from "@/components/import/csv-uploader"
 import { ColumnMapper } from "@/components/import/column-mapper"
 import { DataPreview } from "@/components/import/data-preview"
 import { ImportResults } from "@/components/import/import-results"
+import { importService } from "@/lib/import-service"
+import type { CSVData, ColumnMapping, ValidationFlag, ImportResult } from "@/types"
 
 interface ImportStep {
   id: string
@@ -18,31 +20,14 @@ interface ImportStep {
   status: "pending" | "active" | "completed" | "error"
 }
 
-interface CSVData {
-  headers: string[]
-  rows: string[][]
-  fileName: string
-  fileSize: number
-}
-
-interface ColumnMapping {
-  [csvColumn: string]: string | null
-}
-
-interface ValidationError {
-  row: number
-  column: string
-  value: string
-  error: string
-}
-
 export default function ImportPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [csvData, setCsvData] = useState<CSVData | null>(null)
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({})
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
+  const [validationErrors, setValidationErrors] = useState<ValidationFlag[]>([])
   const [importProgress, setImportProgress] = useState(0)
-  const [importResults, setImportResults] = useState<any>(null)
+  const [importResults, setImportResults] = useState<ImportResult | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
 
   const steps: ImportStep[] = [
     {
@@ -81,42 +66,40 @@ export default function ImportPage() {
     setCurrentStep(2)
   }
 
-  const handleValidation = (errors: ValidationError[]) => {
+  const handleValidation = (errors: ValidationFlag[]) => {
     setValidationErrors(errors)
-    setCurrentStep(3)
+    if (errors.filter(e => e.severity === "error").length === 0) {
+      setCurrentStep(3)
+    }
   }
 
   const handleImport = async () => {
     if (!csvData || !columnMapping) return
 
+    setIsImporting(true)
     setImportProgress(0)
 
     try {
-      // Simulate import progress
-      for (let i = 0; i <= 100; i += 10) {
-        setImportProgress(i)
-        await new Promise((resolve) => setTimeout(resolve, 200))
-      }
+      // Validate data first
+      const { records } = await importService.validateData(csvData, columnMapping)
+      
+      // Update progress
+      setImportProgress(25)
 
-      // Mock import results
-      const results = {
-        totalRows: csvData.rows.length,
-        successfulImports: csvData.rows.length - validationErrors.length,
-        errors: validationErrors.length,
-        warnings: 2,
-        duration: "2.3s",
-        createdRecords: {
-          vehicles: 15,
-          drivers: 8,
-          refuelRecords: 45,
-          locations: 3,
-        },
-      }
+      // Import records
+      setImportProgress(50)
+      const results = await importService.importRecords(records, columnMapping)
+      
+      setImportProgress(100)
 
       setImportResults(results)
       setCurrentStep(4)
     } catch (error) {
       console.error("Import failed:", error)
+      // Set error state
+      const errorStep = steps.find(s => s.id === "import")
+      setIsImporting(false)
+      if (errorStep) errorStep.status = "error"
     }
   }
 
@@ -127,6 +110,7 @@ export default function ImportPage() {
     setValidationErrors([])
     setImportProgress(0)
     setImportResults(null)
+    setIsImporting(false)
   }
 
   return (
@@ -238,10 +222,10 @@ export default function ImportPage() {
                 <div className="flex gap-2">
                   <Button
                     onClick={handleImport}
-                    disabled={importProgress > 0 && importProgress < 100}
+                    disabled={isImporting || validationErrors.filter(e => e.severity === "error").length > 0}
                     className="hover:bg-primary/90"
                   >
-                    {importProgress > 0 && importProgress < 100 ? (
+                    {isImporting ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                         Importing...
@@ -253,6 +237,7 @@ export default function ImportPage() {
                   <Button
                     variant="outline"
                     onClick={() => setCurrentStep(2)}
+                    disabled={isImporting}
                     className="hover:bg-accent hover:text-accent-foreground"
                   >
                     Back to Preview

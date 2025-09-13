@@ -9,7 +9,8 @@ import type {
   FleetStats,
   FuelStats,
   MaintenanceStats,
-} from "@/types/database"
+  ImportResult
+} from "@/types"
 
 class ApiClient {
   private baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -105,6 +106,19 @@ class ApiClient {
 
   async getUsers(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>("/admin/users")
+  }
+
+  // Import API methods
+  async importCSV(file: File, columnMapping: any): Promise<ApiResponse<ImportResult>> {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('columnMapping', JSON.stringify(columnMapping))
+
+    return this.request<ImportResult>("/import/csv", {
+      method: "POST",
+      body: formData,
+      headers: {} // Remove Content-Type to let browser set it for FormData
+    })
   }
 }
 

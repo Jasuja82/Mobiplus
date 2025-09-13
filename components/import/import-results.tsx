@@ -5,22 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircleIcon, AlertCircleIcon, InfoIcon, DownloadIcon } from "lucide-react"
+import type { ImportResult } from "@/types"
 
 interface ImportResultsProps {
-  results: {
-    totalRows: number
-    successfulImports: number
-    errors: number
-    warnings: number
-    duration: string
-    createdRecords: {
-      vehicles?: number
-      drivers?: number
-      refuelRecords?: number
-      locations?: number
-      departments?: number
-    }
-  }
+  results: ImportResult
   onNewImport: () => void
 }
 
@@ -111,8 +99,10 @@ export function ImportResults({ results, onNewImport }: ImportResultsProps) {
               <DownloadIcon className="h-4 w-4 mr-2" />
               Download Report
             </Button>
-            <Button variant="outline" className="flex-1 bg-transparent">
+            <Button variant="outline" className="flex-1 bg-transparent" asChild>
+              <a href="/refuel">
               View Imported Data
+              </a>
             </Button>
           </div>
 

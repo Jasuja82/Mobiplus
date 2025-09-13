@@ -1,19 +1,14 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { UploadIcon, FileIcon, AlertCircleIcon } from "lucide-react"
-
-interface CSVData {
-  headers: string[]
-  rows: string[][]
-  fileName: string
-  fileSize: number
-}
+import { importService } from "@/lib/import-service"
+import type { CSVData } from "@/types"
 
 interface CSVUploaderProps {
   onFileUpload: (data: CSVData) => void
@@ -30,28 +25,7 @@ export function CSVUploader({ onFileUpload }: CSVUploaderProps) {
       setError(null)
 
       try {
-        const text = await file.text()
-        const lines = text.split("\n").filter((line) => line.trim())
-
-        if (lines.length < 2) {
-          throw new Error("CSV file must contain at least a header row and one data row")
-        }
-
-        const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""))
-        const rows = lines.slice(1).map((line) => line.split(",").map((cell) => cell.trim().replace(/"/g, "")))
-
-        // Validate that all rows have the same number of columns as headers
-        const invalidRows = rows.filter((row) => row.length !== headers.length)
-        if (invalidRows.length > 0) {
-          throw new Error(`Found ${invalidRows.length} rows with incorrect number of columns`)
-        }
-
-        const csvData: CSVData = {
-          headers,
-          rows,
-          fileName: file.name,
-          fileSize: file.size,
-        }
+        const csvData = await importService.parseCSV(file)
 
         onFileUpload(csvData)
       } catch (err) {
@@ -131,7 +105,9 @@ export function CSVUploader({ onFileUpload }: CSVUploaderProps) {
                     <p className="text-sm text-muted-foreground">{(uploadedFile.size / 1024).toFixed(1)} KB</p>
                   </div>
                 </div>
-                <Badge variant="secondary">{isProcessing ? "Processing..." : "Ready"}</Badge>
+                <Badge variant={error ? "destructive" : "secondary"}>
+                  {isProcessing ? "Processing..." : error ? "Error" : "Ready"}
+                </Badge>
               </div>
             </div>
           )}
@@ -177,11 +153,11 @@ export function CSVUploader({ onFileUpload }: CSVUploaderProps) {
             </div>
 
             <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded text-sm font-mono">
-              N.º Interno,Matrícula,Data,Condutor,Litros,Km,Local
+              vehicle.internal_number,vehicle.license_plate,refuel.date,driver.name,refuel.liters,refuel.odometer_reading,location.name
               <br />
-              01,AB-12-34,2024-01-15,João Silva,45.2,12500,Angra Centro
+              01,AB-12-34,2024-01-15,João Silva,45.2,125000,Angra Centro
               <br />
-              28,CD-56-78,2024-01-15,Maria Santos,52.1,8900,Posto Sul
+              28,CD-56-78,2024-01-16,Maria Santos,52.1,89000,Posto Sul
             </div>
           </div>
         </CardContent>
