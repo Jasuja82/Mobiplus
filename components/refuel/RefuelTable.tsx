@@ -24,15 +24,23 @@ import Link from "next/link"
 
 type RefuelRecordWithRelations = RefuelRecord & {
   vehicle?: {
+    id: string
     license_plate: string
     make: string
     model: string
+    vehicle_number?: string
+    internal_number?: string
   } | null
   driver?: {
+    id: string
+    name: string
+    internal_number?: string
     license_number: string
-    user?: {
-      name: string
-    } | null
+  } | null
+  fuel_station?: {
+    id: string
+    name: string
+    brand: string
   } | null
   created_by_user?: {
     name: string
@@ -59,8 +67,9 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
       record.vehicle?.license_plate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.vehicle?.make?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.vehicle?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.driver?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.fuel_station?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.fuel_station?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.fuel_station?.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.receipt_number?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
@@ -70,6 +79,15 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
       month: "2-digit",
       year: "numeric",
     })
+  }
+
+  const formatVehicleNumber = (vehicleNumber?: string) => {
+    if (!vehicleNumber) return ""
+    const num = Number.parseInt(vehicleNumber)
+    if (num >= 1 && num <= 9) {
+      return `0${num}`
+    }
+    return vehicleNumber
   }
 
   const handleDelete = async () => {
@@ -162,7 +180,10 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
                       <TableCell>
                         {record.vehicle ? (
                           <div>
-                            <div className="font-medium">{record.vehicle.license_plate}</div>
+                            <div className="font-medium">
+                              {formatVehicleNumber(record.vehicle.vehicle_number || record.vehicle.internal_number)} -{" "}
+                              {record.vehicle.license_plate}
+                            </div>
                             <div className="text-sm text-muted-foreground">
                               {record.vehicle.make} {record.vehicle.model}
                             </div>
@@ -171,12 +192,23 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
                           "N/A"
                         )}
                       </TableCell>
-                      <TableCell>{record.driver?.user?.name || record.driver?.license_number || "N/A"}</TableCell>
-                      <TableCell>{record.mileage ? record.mileage.toLocaleString() : "N/A"} km</TableCell>
+                      <TableCell>{record.driver?.name || "N/A"}</TableCell>
+                      <TableCell>
+                        {record.odometer_reading ? record.odometer_reading.toLocaleString() : "N/A"} km
+                      </TableCell>
                       <TableCell>{record.liters.toFixed(1)}L</TableCell>
                       <TableCell>€{record.cost_per_liter.toFixed(3)}</TableCell>
                       <TableCell className="font-medium">€{record.total_cost.toFixed(2)}</TableCell>
-                      <TableCell>{record.fuel_station || "N/A"}</TableCell>
+                      <TableCell>
+                        {record.fuel_station ? (
+                          <div>
+                            <div className="font-medium">{record.fuel_station.brand}</div>
+                            <div className="text-sm text-muted-foreground">{record.fuel_station.name}</div>
+                          </div>
+                        ) : (
+                          "N/A"
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link href={`/refuel/${record.id}`}>

@@ -21,10 +21,24 @@ export default async function RefuelPage() {
     .from("refuel_records")
     .select(`
       *,
-      vehicle:vehicles(license_plate, make, model),
+      vehicle:vehicles(
+        id,
+        license_plate, 
+        make, 
+        model,
+        vehicle_number,
+        internal_number
+      ),
       driver:drivers(
-        license_number,
-        user:users(name)
+        id,
+        name,
+        internal_number,
+        license_number
+      ),
+      fuel_station:fuel_stations(
+        id,
+        name,
+        brand
       ),
       created_by_user:users!refuel_records_created_by_fkey(name)
     `)
@@ -33,15 +47,15 @@ export default async function RefuelPage() {
 
   const { data: vehicles } = await supabase
     .from("vehicles")
-    .select("id, license_plate, make, model")
+    .select("id, license_plate, make, model, vehicle_number, internal_number")
     .eq("status", "active")
-    .order("license_plate")
+    .order("vehicle_number")
 
   const { data: drivers } = await supabase
     .from("drivers")
-    .select("id, license_number, user:users(name)")
-    .eq("status", "active")
-    .order("license_number")
+    .select("id, name, internal_number, license_number")
+    .eq("is_active", true)
+    .order("internal_number")
 
   if (error) {
     console.error("Error fetching refuel records:", error)
