@@ -20,12 +20,19 @@ export function DriversTable({ drivers }: DriversTableProps) {
   console.log("[v0] DriversTable received drivers:", drivers)
   console.log("[v0] Drivers array length:", drivers?.length || 0)
 
-  const filteredDrivers = drivers.filter(
-    (driver) =>
-      driver.user?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-      driver.license_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-      driver.department?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()),
-  )
+  const filteredDrivers = drivers.filter((driver) => {
+    if (!searchTerm.trim()) {
+      return true // Show all drivers when no search term
+    }
+
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      driver.name?.toLowerCase()?.includes(searchLower) ||
+      driver.internal_number?.toLowerCase()?.includes(searchLower) ||
+      driver.license_number?.toLowerCase()?.includes(searchLower) ||
+      driver.department?.name?.toLowerCase()?.includes(searchLower)
+    )
+  })
 
   console.log("[v0] Filtered drivers count:", filteredDrivers.length)
 
@@ -52,6 +59,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Nº Interno</TableHead>
               <TableHead>Nº Carta</TableHead>
               <TableHead>Categorias</TableHead>
               <TableHead>Validade Carta</TableHead>
@@ -63,7 +71,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
           <TableBody>
             {filteredDrivers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   {drivers?.length === 0 ? "Nenhum condutor registado" : "Nenhum condutor encontrado"}
                 </TableCell>
               </TableRow>
@@ -72,31 +80,36 @@ export function DriversTable({ drivers }: DriversTableProps) {
                 <TableRow key={driver.id}>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{driver.user?.name}</div>
+                      <div className="font-medium">{driver.name}</div>
                       <div className="text-sm text-muted-foreground">{driver.user?.email}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono">{driver.license_number}</TableCell>
+                  <TableCell className="font-mono">{driver.internal_number}</TableCell>
+                  <TableCell className="font-mono">{driver.license_number || "—"}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {driver.license_categories?.map((category) => (
                         <Badge key={category} variant="secondary" className="text-xs">
                           {category}
                         </Badge>
-                      ))}
+                      )) || "—"}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className={isLicenseExpiringSoon(driver.license_expiry) ? "text-red-600" : ""}>
-                      {formatDate(driver.license_expiry)}
-                      {isLicenseExpiringSoon(driver.license_expiry) && (
-                        <Badge variant="destructive" className="ml-2 text-xs">
-                          Expira em breve
-                        </Badge>
-                      )}
-                    </div>
+                    {driver.license_expiry ? (
+                      <div className={isLicenseExpiringSoon(driver.license_expiry) ? "text-red-600" : ""}>
+                        {formatDate(driver.license_expiry)}
+                        {isLicenseExpiringSoon(driver.license_expiry) && (
+                          <Badge variant="destructive" className="ml-2 text-xs">
+                            Expira em breve
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
-                  <TableCell>{driver.department?.name}</TableCell>
+                  <TableCell>{driver.department?.name || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={driver.is_active ? "default" : "secondary"}>
                       {driver.is_active ? "Ativo" : "Inativo"}
@@ -139,11 +152,13 @@ export function DriversTable({ drivers }: DriversTableProps) {
   )
 }
 
-function formatDate(dateString: string) {
+function formatDate(dateString: string | null) {
+  if (!dateString) return "—"
   return new Date(dateString).toLocaleDateString("pt-PT")
 }
 
-function isLicenseExpiringSoon(expiryDate: string) {
+function isLicenseExpiringSoon(expiryDate: string | null) {
+  if (!expiryDate) return false
   const expiry = new Date(expiryDate)
   const today = new Date()
   const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
