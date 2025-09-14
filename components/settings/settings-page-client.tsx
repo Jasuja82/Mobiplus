@@ -1,4 +1,5 @@
 "use client"
+
 import { Settings, Shield, Users, Database, Bell, Palette } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GeneralSettings } from "@/components/settings/general-settings"
@@ -6,11 +7,25 @@ import { NotificationSettings } from "@/components/settings/notification-setting
 import { SuperuserPanel } from "@/components/settings/superuser-panel"
 import { UserManagement } from "@/components/settings/user-management"
 import { SystemSettings } from "@/components/settings/system-settings"
-import { useAuth } from "@/hooks/use-auth"
+import { HybridAuthProvider, useHybridAuth } from "@/hooks/use-auth-hybrid"
 
-export default function SettingsContent() {
-  const { user, isHydrated } = useAuth()
+interface User {
+  id: string
+  email: string
+  name?: string
+  role: string
+  department?: string
+  assigned_vehicles?: string[]
+}
 
+interface SettingsPageClientProps {
+  initialUser: User | null
+}
+
+function SettingsContent() {
+  const { user, isHydrated } = useHybridAuth()
+
+  // Show loading state during hydration
   if (!isHydrated) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -86,5 +101,13 @@ export default function SettingsContent() {
         )}
       </Tabs>
     </div>
+  )
+}
+
+export function SettingsPageClient({ initialUser }: SettingsPageClientProps) {
+  return (
+    <HybridAuthProvider initialUser={initialUser}>
+      <SettingsContent />
+    </HybridAuthProvider>
   )
 }

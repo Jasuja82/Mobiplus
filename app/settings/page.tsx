@@ -1,21 +1,32 @@
-import dynamic from "next/dynamic"
-import { Settings } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { AuthProvider } from "@/hooks/use-auth.tsx"
+import SettingsContent from "@/components/settings/settings-content"
 
-const SettingsContent = dynamic(() => import("@/components/settings/settings-content"), {
-  ssr: false,
-  loading: () => (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Settings className="h-8 w-8 text-blue-600" />
-        <div>
-          <h1 className="text-3xl font-bold">System Settings</h1>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    </div>
-  ),
-})
+export default async function SettingsPage() {
+  const supabase = await createClient()
 
-export default function SettingsPage() {
-  return <SettingsContent />
+  // Get user data server-side for SSR
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser()
+
+  let initialUser = null
+  if (authUser) {
+    const { data: profile } = await supabase.from("users").select("*").eq("id", authUser.id).single()
+    if (profile) {
+      initialUser = {
+        id: authUser.id,
+        email: authUser.email!,
+        ...profile,
+      }
+    }
+  }
+
+  return (
+    <AuthProvider initialUser={initialUser}>
+      <SettingsContent />
+    </AuthProvider>
+  )
 }
+
+export const dynamic = "force-dynamic"

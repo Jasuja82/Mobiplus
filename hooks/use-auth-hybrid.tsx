@@ -28,9 +28,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 interface AuthProviderProps {
   children: ReactNode
   initialUser?: User | null
+  initialSession?: any
 }
 
-export function AuthProvider({ children, initialUser }: AuthProviderProps) {
+export function HybridAuthProvider({ children, initialUser, initialSession }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(initialUser || null)
   const [loading, setLoading] = useState(!initialUser)
   const [isHydrated, setIsHydrated] = useState(false)
@@ -43,36 +44,32 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   useEffect(() => {
     setIsHydrated(true)
 
-    // If we have initial user data from SSR, use it and skip loading
+    // If we have initial data from SSR, use it
     if (initialUser) {
       setUser(initialUser)
       setLoading(false)
       return
     }
 
-    // Get initial session client-side only if no initial user provided
+    // Otherwise, get session client-side
     const getSession = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-        if (session?.user) {
-          const { data: profile } = await supabase.from("users").select("*").eq("id", session.user.id).single()
+      if (session?.user) {
+        const { data: profile } = await supabase.from("users").select("*").eq("id", session.user.id).single()
 
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              ...profile,
-            })
-          }
+        if (profile) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            ...profile,
+          })
         }
-      } catch (error) {
-        console.error("Error getting session:", error)
-      } finally {
-        setLoading(false)
       }
+
+      setLoading(false)
     }
 
     getSession()
@@ -81,25 +78,20 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      try {
-        if (session?.user) {
-          const { data: profile } = await supabase.from("users").select("*").eq("id", session.user.id).single()
+      if (session?.user) {
+        const { data: profile } = await supabase.from("users").select("*").eq("id", session.user.id).single()
 
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              ...profile,
-            })
-          }
-        } else {
-          setUser(null)
+        if (profile) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            ...profile,
+          })
         }
-      } catch (error) {
-        console.error("Error in auth state change:", error)
-      } finally {
-        setLoading(false)
+      } else {
+        setUser(null)
       }
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -152,10 +144,10 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export function useAuth(): AuthContextType {
+export function useHybridAuth(): AuthContextType {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useHybridAuth must be used within a HybridAuthProvider")
   }
   return context
 }

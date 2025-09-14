@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { SettingsProvider } from "@/contexts/SettingsContext"
+import { AuthProvider } from "@/hooks/use-auth.tsx"
 import { Suspense } from "react"
 import "./globals.css"
 
@@ -37,16 +38,18 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <SettingsProvider>
-            <SidebarProvider>
-              <Suspense fallback={<div>Loading...</div>}>
-                <div className="flex min-h-screen w-full">
-                  <AppSidebar />
-                  <main className="flex-1">{children}</main>
-                </div>
-              </Suspense>
-            </SidebarProvider>
-          </SettingsProvider>
+          <AuthProvider>
+            <SettingsProvider>
+              <SidebarProvider>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <div className="flex min-h-screen w-full">
+                    <AppSidebar />
+                    <main className="flex-1">{children}</main>
+                  </div>
+                </Suspense>
+              </SidebarProvider>
+            </SettingsProvider>
+          </AuthProvider>
           <Toaster />
         </ThemeProvider>
         <Analytics />
