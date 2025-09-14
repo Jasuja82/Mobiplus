@@ -12,8 +12,8 @@ import { useEffect, useState } from "react"
 export const dynamic = "force-dynamic"
 
 export default function SettingsPage() {
+  const { user: authUser } = useAuth() // Moved useAuth call to the top level
   const [isClient, setIsClient] = useState(false)
-  const { user: authUser } = useAuth()
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
