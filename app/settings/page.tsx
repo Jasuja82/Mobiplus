@@ -20,7 +20,7 @@ export default async function SettingsPage() {
     }
   }
 
-  return <SettingsClientWrapper initialUser={initialUser} />
+  return <SettingsClientWrapper />
 }
 
 export const dynamic = "force-dynamic"

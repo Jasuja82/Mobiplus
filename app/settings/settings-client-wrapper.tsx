@@ -1,7 +1,6 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { AuthProvider } from "@/hooks/use-auth.tsx"
 
 const SettingsContent = dynamic(() => import("@/components/settings/settings-content"), {
   ssr: false,
@@ -12,14 +11,6 @@ const SettingsContent = dynamic(() => import("@/components/settings/settings-con
   ),
 })
 
-interface SettingsClientWrapperProps {
-  initialUser: any
-}
-
-export default function SettingsClientWrapper({ initialUser }: SettingsClientWrapperProps) {
-  return (
-    <AuthProvider initialUser={initialUser}>
-      <SettingsContent />
-    </AuthProvider>
-  )
+export default function SettingsClientWrapper() {
+  return <SettingsContent />
 }

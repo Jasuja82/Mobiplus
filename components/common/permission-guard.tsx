@@ -14,13 +14,14 @@ interface PermissionGuardProps {
 }
 
 export function PermissionGuard({ resource, action, children, fallback = null, resourceData }: PermissionGuardProps) {
-  const authContext = useAuth()
   const [isClient, setIsClient] = useState(false)
-  const [auth, setAuth] = useState<any>(authContext)
+  const [auth, setAuth] = useState<any>(null)
+  const authContext = useAuth()
 
   useEffect(() => {
     setIsClient(true)
-  }, [])
+    setAuth(authContext)
+  }, [authContext])
 
   if (!isClient || !auth?.user) return <>{fallback}</>
 
@@ -42,13 +43,14 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ roles, children, fallback = null }: RoleGuardProps) {
-  const authContext = useAuth()
   const [isClient, setIsClient] = useState(false)
-  const [auth, setAuth] = useState<any>(authContext)
+  const [auth, setAuth] = useState<any>(null)
+  const authContext = useAuth()
 
   useEffect(() => {
     setIsClient(true)
-  }, [])
+    setAuth(authContext)
+  }, [authContext])
 
   if (!isClient || !auth?.user || !roles.includes(auth.user.role as UserRole)) {
     return <>{fallback}</>
