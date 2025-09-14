@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/use-auth"
 import { PermissionManager, type UserRole } from "@/lib/permissions"
 import type { ReactNode } from "react"
+import { useEffect, useState } from "react"
 
 interface PermissionGuardProps {
   resource: string
@@ -13,7 +14,14 @@ interface PermissionGuardProps {
 }
 
 export function PermissionGuard({ resource, action, children, fallback = null, resourceData }: PermissionGuardProps) {
+  const [isClient, setIsClient] = useState(false)
   const { user } = useAuth()
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) return fallback
 
   if (!user) return fallback
 
@@ -29,7 +37,14 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ roles, children, fallback = null }: RoleGuardProps) {
+  const [isClient, setIsClient] = useState(false)
   const { user } = useAuth()
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) return fallback
 
   if (!user || !roles.includes(user.role as UserRole)) {
     return <>{fallback}</>
