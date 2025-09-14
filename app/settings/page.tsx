@@ -8,6 +8,8 @@ import { SuperuserPanel } from "@/components/settings/superuser-panel"
 import { UserManagement } from "@/components/settings/user-management"
 import { SystemSettings } from "@/components/settings/system-settings"
 
+export const dynamic = "force-dynamic"
+
 export default function SettingsPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
