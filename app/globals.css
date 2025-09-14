@@ -1,84 +1,86 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "primereact/resources/themes/lara-light-cyan/theme.css";
+@import "primereact/resources/primereact.min.css";
+@import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #ffffff;
+  --foreground: #4b5563;
+  --card: #f9fafb;
+  --card-foreground: #4b5563;
+  --popover: #ffffff;
+  --popover-foreground: #4b5563;
+  --primary: #0891b2;
+  --primary-foreground: #ffffff;
+  --secondary: #f97316;
+  --secondary-foreground: #ffffff;
+  --muted: #f9fafb;
+  --muted-foreground: #4b5563;
+  --accent: #f97316;
+  --accent-foreground: #ffffff;
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #ffffff;
+  --ring: rgba(8, 145, 178, 0.5);
+  --chart-1: #0891b2;
+  --chart-2: #f97316;
+  --chart-3: #4b5563;
+  --chart-4: #d1fae5;
+  --chart-5: #fef9c3;
+  --radius: 0.5rem;
+  --sidebar: #f9fafb;
+  --sidebar-foreground: #4b5563;
+  --sidebar-primary: #0891b2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f97316;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: rgba(8, 145, 178, 0.5);
   --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-jetbrains-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "Roboto Mono", monospace;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: #1f2937;
+  --foreground: #f9fafb;
+  --card: #374151;
+  --card-foreground: #f9fafb;
+  --popover: #374151;
+  --popover-foreground: #f9fafb;
+  --primary: #06b6d4;
+  --primary-foreground: #1f2937;
+  --secondary: #fb923c;
+  --secondary-foreground: #1f2937;
+  --muted: #374151;
+  --muted-foreground: #9ca3af;
+  --accent: #fb923c;
+  --accent-foreground: #1f2937;
+  --destructive: #f87171;
+  --destructive-foreground: #1f2937;
+  --border: #4b5563;
+  --input: #374151;
+  --ring: rgba(6, 182, 212, 0.5);
+  --chart-1: #06b6d4;
+  --chart-2: #fb923c;
+  --chart-3: #9ca3af;
+  --chart-4: #065f46;
+  --chart-5: #92400e;
+  --sidebar: #374151;
+  --sidebar-foreground: #f9fafb;
+  --sidebar-primary: #06b6d4;
+  --sidebar-primary-foreground: #1f2937;
+  --sidebar-accent: #fb923c;
+  --sidebar-accent-foreground: #1f2937;
+  --sidebar-border: #4b5563;
+  --sidebar-ring: rgba(6, 182, 212, 0.5);
 }
 
 @theme inline {
-  /* Updated font variable references to match GeistSans.variable and GeistMono.variable */
-  /* Updated font variables to use Google Fonts instead of local Geist fonts */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "Cascadia Code", "Roboto Mono", monospace;
   --color-background: var(--background);
@@ -126,4 +128,148 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.p-card {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.p-card .p-card-header {
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem;
+}
+
+.p-card .p-card-content {
+  padding: 1.5rem;
+}
+
+.p-button {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.p-button:hover {
+  background: color-mix(in srgb, var(--primary) 90%, black);
+  border-color: color-mix(in srgb, var(--primary) 90%, black);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+}
+
+.p-button.p-button-secondary {
+  background: var(--secondary);
+  border-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.p-button.p-button-secondary:hover {
+  background: color-mix(in srgb, var(--secondary) 90%, black);
+  border-color: color-mix(in srgb, var(--secondary) 90%, black);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.p-datatable {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.p-datatable .p-datatable-header {
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem;
+  font-weight: 600;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--muted);
+}
+
+.p-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.p-panel .p-panel-header {
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+}
+
+.p-panel .p-panel-content {
+  padding: 1.5rem;
+}
+
+.p-chart {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.p-menubar {
+  background: var(--sidebar);
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius);
+}
+
+.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link {
+  color: var(--sidebar-foreground);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease-in-out;
+}
+
+.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link:hover {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+
+.p-tag {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.p-tag.p-tag-success {
+  background: #22c55e;
+  color: white;
+}
+
+.p-tag.p-tag-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.p-tag.p-tag-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.p-tag.p-tag-info {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }

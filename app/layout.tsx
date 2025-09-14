@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
+import { PrimeThemeProvider } from "@/components/prime/PrimeThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
@@ -36,20 +37,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link id="theme-link" rel="stylesheet" href="/themes/lara-light-cyan/theme.css" />
+      </head>
       <body className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <SettingsProvider>
-              <SidebarProvider>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <div className="flex min-h-screen w-full">
-                    <AppSidebar />
-                    <main className="flex-1">{children}</main>
-                  </div>
-                </Suspense>
-              </SidebarProvider>
-            </SettingsProvider>
-          </AuthProvider>
+          <PrimeThemeProvider>
+            <AuthProvider>
+              <SettingsProvider>
+                <SidebarProvider>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <div className="flex min-h-screen w-full">
+                      <AppSidebar />
+                      <main className="flex-1">{children}</main>
+                    </div>
+                  </Suspense>
+                </SidebarProvider>
+              </SettingsProvider>
+            </AuthProvider>
+          </PrimeThemeProvider>
           <Toaster />
         </ThemeProvider>
         <Analytics />

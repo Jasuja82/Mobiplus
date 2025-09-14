@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "primereact/card"
+import { Tag } from "primereact/tag"
 import { Car, Wrench, AlertTriangle, CheckCircle } from "lucide-react"
 
 interface DashboardOverviewProps {
@@ -17,43 +18,56 @@ export function DashboardOverview({ vehicleStats }: DashboardOverviewProps) {
       value: vehicleStats.active,
       description: "Disponíveis para uso",
       icon: Car,
-      color: "text-green-600",
+      color: "success",
+      bgColor: "bg-green-50",
+      iconColor: "text-green-600",
     },
     {
       title: "Em Manutenção",
       value: vehicleStats.maintenance,
       description: "Indisponíveis temporariamente",
       icon: Wrench,
-      color: "text-yellow-600",
+      color: "warning",
+      bgColor: "bg-orange-50",
+      iconColor: "text-orange-600",
     },
     {
       title: "Inativos",
       value: vehicleStats.inactive,
       description: "Fora de serviço",
       icon: AlertTriangle,
-      color: "text-red-600",
+      color: "danger",
+      bgColor: "bg-red-50",
+      iconColor: "text-red-600",
     },
     {
       title: "Total da Frota",
       value: vehicleStats.total,
       description: "Todos os veículos",
       icon: CheckCircle,
-      color: "text-blue-600",
+      color: "info",
+      bgColor: "bg-cyan-50",
+      iconColor: "text-cyan-600",
     },
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
-        <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <stat.icon className={`h-4 w-4 ${stat.color}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground">{stat.description}</p>
-          </CardContent>
+        <Card key={stat.title} className="hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
+              </div>
+              <Tag value={stat.color} severity={stat.color as any} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{stat.title}</h3>
+              <div className="text-3xl font-bold text-foreground">{stat.value}</div>
+              <p className="text-sm text-muted-foreground">{stat.description}</p>
+            </div>
+          </div>
         </Card>
       ))}
     </div>
