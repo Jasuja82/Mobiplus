@@ -19,9 +19,9 @@ export function DriversTable({ drivers }: DriversTableProps) {
 
   const filteredDrivers = drivers.filter(
     (driver) =>
-      driver.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.license_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.department?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      driver.user?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      driver.license_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      driver.department?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()),
   )
 
   const formatDate = (dateString: string) => {
