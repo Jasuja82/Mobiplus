@@ -17,6 +17,7 @@ import type {
 export interface VehicleWithRelations extends Vehicle {
   category?: VehicleCategory
   department?: Department
+  home_location?: Location
 }
 
 export interface RefuelWithRelations extends RefuelRecord {

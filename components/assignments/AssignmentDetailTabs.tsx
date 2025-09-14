@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button"
 import { FileText, Car, BarChart3, MapPin, Building, Calendar, Eye } from "lucide-react"
 import Link from "next/link"
 import type { AssignmentType } from "@/lib/database"
+import type { VehicleWithRelations } from "@/types/relations"
 
 interface AssignmentDetailTabsProps {
   assignment: AssignmentType
-  vehicles: any[]
+  vehicles: VehicleWithRelations[]
 }
 
 export function AssignmentDetailTabs({ assignment, vehicles }: AssignmentDetailTabsProps) {

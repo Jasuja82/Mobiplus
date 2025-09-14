@@ -1,52 +1,14 @@
-// Main types export file - single source of truth for all types
-export * from './entities'
-export * from './relations'
-export * from './forms'
-export * from './api'
-export * from './import'
-
-// Re-export commonly used types for convenience
-export type {
-  User,
-  Vehicle,
-  Driver,
-  RefuelRecord,
-  Department,
-  Location,
-  MaintenanceSchedule,
-  VehicleCategory
-} from './entities'
-
-export type {
-  VehicleWithRelations,
-  RefuelWithRelations,
-  DriverWithRelations,
-  MaintenanceWithRelations
-} from './relations'
-
-export type {
-  VehicleFormData,
-  RefuelFormData,
-  DriverFormData,
-  LocationFormData,
-  DepartmentFormData
-} from './forms'
-
-export type {
-  ApiResponse,
-  FleetStats,
-  FuelStats,
-  MaintenanceStats,
-  ImportResult
-} from './api'
-
-export type {
-  CSVData,
-  ColumnMapping,
-  ImportStep,
-  ValidationFlag,
-  ImportSession
-} from './import'
+// Import types for use in Database type
+import type { User } from './entities/User'
+import type { Vehicle } from './entities/Vehicle'
+import type { Driver } from './entities/Driver'
+import type { RefuelRecord } from './entities/RefuelRecord'
+import type { Department } from './entities/Department'
+import type { Location } from './entities/Location'
+import type { MaintenanceSchedule } from './entities/MaintenanceSchedule'
+import type { VehicleCategory } from './entities/VehicleCategory'
+import type { MaintenanceCategory } from './entities/MaintenanceCategory'
+import type { AssignmentType } from './entities/AssignmentType'
 
 // Database type for Supabase
 export type Database = {
@@ -123,6 +85,43 @@ export type Database = {
         }
         Update: Partial<VehicleCategory>
       }
+      maintenance_categories: {
+        Row: MaintenanceCategory
+        Insert: Omit<MaintenanceCategory, 'id' | 'created_at'> & {
+          id?: string
+          created_at?: string
+        }
+        Update: Partial<MaintenanceCategory>
+      }
+      assignment_types: {
+        Row: AssignmentType
+        Insert: Omit<AssignmentType, 'id' | 'created_at'> & {
+          id?: string
+          created_at?: string
+        }
+        Update: Partial<AssignmentType>
+      }
     }
   }
 }
+
+// Import and re-export all entity types
+export type { User } from './entities/User'
+export type { Vehicle } from './entities/Vehicle'
+export type { Driver } from './entities/Driver'
+export type { RefuelRecord } from './entities/RefuelRecord'
+export type { Department } from './entities/Department'
+export type { Location } from './entities/Location'
+export type { MaintenanceSchedule } from './entities/MaintenanceSchedule'
+export type { VehicleCategory } from './entities/VehicleCategory'
+export type { MaintenanceCategory } from './entities/MaintenanceCategory'
+export type { AssignmentType } from './entities/AssignmentType'
+
+// Import and re-export all relation types
+export * from './relations'
+// Import and re-export all form types
+export * from './forms'
+// Import and re-export all API types
+export * from './api'
+// Import and re-export all import types
+export * from './import'
