@@ -53,7 +53,7 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
       const { data, error } = await supabase
         .from("vehicles")
         .select("id, license_plate, internal_number, make, model")
-        .eq("is_active", true)
+        .eq("status", "active")
         .order("internal_number")
 
       if (error) {
