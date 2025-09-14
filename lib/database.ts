@@ -9,11 +9,11 @@ import type {
   AssignmentType,
   VehicleWithRelations,
   RefuelWithRelations,
-  DriverWithRelations
+  FuelStation,
 } from "@/types"
 
 // Re-export for backward compatibility
-export type { Department, Location, Driver, Vehicle, RefuelRecord, MaintenanceRecord, AssignmentType }
+export type { Department, Location, Driver, Vehicle, RefuelRecord, MaintenanceRecord, AssignmentType, FuelStation }
 
 export class DatabaseService {
   private _supabase: ReturnType<typeof createServerSupabaseClient> | null = null
@@ -249,7 +249,9 @@ export class DatabaseService {
     return data as RefuelWithRelations[]
   }
 
-  async createRefuelRecord(record: Omit<RefuelRecord, "id" | "created_at" | "updated_at">): Promise<RefuelWithRelations> {
+  async createRefuelRecord(
+    record: Omit<RefuelRecord, "id" | "created_at" | "updated_at">,
+  ): Promise<RefuelWithRelations> {
     const { data, error } = await this.supabase
       .from("refuel_records")
       .insert(record)
@@ -265,11 +267,77 @@ export class DatabaseService {
     return data as RefuelWithRelations
   }
 
-  async bulkCreateRefuelRecords(records: Omit<RefuelRecord, "id" | "created_at" | "updated_at">[]): Promise<RefuelWithRelations[]> {
+  async bulkCreateRefuelRecords(
+    records: Omit<RefuelRecord, "id" | "created_at" | "updated_at">[],
+  ): Promise<RefuelWithRelations[]> {
     const { data, error } = await this.supabase.from("refuel_records").insert(records).select()
 
     if (error) throw error
     return data as RefuelWithRelations[]
+  }
+
+  async getRefuelRecord(id: string): Promise<RefuelWithRelations | null> {
+    const { data, error } = await this.supabase
+      .from("refuel_records")
+      .select(`
+        *,
+        vehicle:vehicles(*),
+        driver:drivers(*),
+        fuel_station:fuel_stations(*),
+        location:locations(*)
+      `)
+      .eq("id", id)
+      .single()
+
+    if (error) {
+      if (error.code === "PGRST116") return null // Record not found
+      throw error
+    }
+    return data as RefuelWithRelations
+  }
+
+  async updateRefuelRecord(id: string, updates: Partial<RefuelRecord>): Promise<RefuelWithRelations | null> {
+    const { data, error } = await this.supabase
+      .from("refuel_records")
+      .update(updates)
+      .eq("id", id)
+      .select(`
+        *,
+        vehicle:vehicles(*),
+        driver:drivers(*),
+        fuel_station:fuel_stations(*),
+        location:locations(*)
+      `)
+      .single()
+
+    if (error) {
+      if (error.code === "PGRST116") return null // Record not found
+      throw error
+    }
+    return data as RefuelWithRelations
+  }
+
+  async deleteRefuelRecord(id: string): Promise<boolean> {
+    const { error } = await this.supabase.from("refuel_records").delete().eq("id", id)
+
+    if (error) {
+      if (error.code === "PGRST116") return false // Record not found
+      throw error
+    }
+    return true
+  }
+
+  // Fuel Stations
+  async getFuelStations() {
+    const { data, error } = await this.supabase
+      .from("fuel_stations")
+      .select("*")
+      .eq("is_active", true)
+      .order("brand")
+      .order("name")
+
+    if (error) throw error
+    return data as FuelStation[]
   }
 
   // Analytics

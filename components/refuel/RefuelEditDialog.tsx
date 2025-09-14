@@ -10,12 +10,22 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { createClient } from "@/lib/supabase/client"
 import type { RefuelRecord, Vehicle, Driver } from "@/types/database"
+
+interface FuelStation {
+  id: string
+  name: string
+  brand: string
+  address: string
+  is_active: boolean
+}
 
 interface RefuelEditDialogProps {
   record: RefuelRecord & {
-    vehicle?: { license_plate: string; make: string; model: string } | null
-    driver?: { license_number: string; user?: { name: string } | null } | null
+    vehicle?: { license_plate: string; make: string; model: string; internal_number: number } | null
+    driver?: { name: string; internal_number: string; license_number: string } | null
+    fuel_station?: { name: string; brand: string } | null
   }
   vehicles: Vehicle[]
   drivers: Driver[]
@@ -27,18 +37,45 @@ interface RefuelEditDialogProps {
 export function RefuelEditDialog({ record, vehicles, drivers, open, onOpenChange, onSuccess }: RefuelEditDialogProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [fuelStations, setFuelStations] = useState<FuelStation[]>([])
   const [formData, setFormData] = useState({
     vehicle_id: record.vehicle_id,
     driver_id: record.driver_id,
     refuel_date: record.refuel_date.split("T")[0], // Format for date input
-    mileage: record.mileage,
+    odometer_reading: record.odometer_reading || 0,
     liters: record.liters,
     cost_per_liter: record.cost_per_liter,
     total_cost: record.total_cost,
-    fuel_station: record.fuel_station || "",
+    fuel_station_id: record.fuel_station_id || "",
     receipt_number: record.receipt_number || "",
     notes: record.notes || "",
   })
+
+  useEffect(() => {
+    const fetchFuelStations = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from("fuel_stations")
+          .select("id, name, brand, address, is_active")
+          .eq("is_active", true)
+          .order("brand")
+          .order("name")
+
+        if (error) {
+          console.error("Error fetching fuel stations:", error)
+        } else {
+          setFuelStations(data || [])
+        }
+      } catch (error) {
+        console.error("Error fetching fuel stations:", error)
+      }
+    }
+
+    if (open) {
+      fetchFuelStations()
+    }
+  }, [open])
 
   useEffect(() => {
     const total = formData.liters * formData.cost_per_liter
@@ -68,7 +105,7 @@ export function RefuelEditDialog({ record, vehicles, drivers, open, onOpenChange
       onSuccess()
       onOpenChange(false)
     } catch (error) {
-      console.error("[v0] Error updating refuel record:", error)
+      console.error("Error updating refuel record:", error)
       toast({
         title: "Erro",
         description: "Erro ao atualizar registo de abastecimento",
@@ -77,6 +114,12 @@ export function RefuelEditDialog({ record, vehicles, drivers, open, onOpenChange
     } finally {
       setLoading(false)
     }
+  }
+
+  const formatVehicleDisplay = (vehicle: any) => {
+    const num = vehicle.internal_number
+    const formattedNum = num >= 1 && num <= 9 ? num.toString().padStart(2, "0") : num.toString()
+    return `${formattedNum} - ${vehicle.license_plate}`
   }
 
   return (
@@ -100,7 +143,7 @@ export function RefuelEditDialog({ record, vehicles, drivers, open, onOpenChange
                 <SelectContent>
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.license_plate} - {vehicle.make} {vehicle.model}
+                      {formatVehicleDisplay(vehicle)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -119,7 +162,7 @@ export function RefuelEditDialog({ record, vehicles, drivers, open, onOpenChange
                 <SelectContent>
                   {drivers.map((driver) => (
                     <SelectItem key={driver.id} value={driver.id}>
-                      {driver.license_number}
+                      {driver.name} ({driver.internal_number})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -140,12 +183,12 @@ export function RefuelEditDialog({ record, vehicles, drivers, open, onOpenChange
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mileage">Quilometragem</Label>
+              <Label htmlFor="odometer_reading">Quilometragem</Label>
               <Input
-                id="mileage"
+                id="odometer_reading"
                 type="number"
-                value={formData.mileage}
-                onChange={(e) => setFormData((prev) => ({ ...prev, mileage: Number(e.target.value) }))}
+                value={formData.odometer_reading}
+                onChange={(e) => setFormData((prev) => ({ ...prev, odometer_reading: Number(e.target.value) }))}
                 required
               />
             </div>
@@ -191,13 +234,22 @@ export function RefuelEditDialog({ record, vehicles, drivers, open, onOpenChange
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="fuel_station">Posto de Combustível</Label>
-              <Input
-                id="fuel_station"
-                value={formData.fuel_station}
-                onChange={(e) => setFormData((prev) => ({ ...prev, fuel_station: e.target.value }))}
-                placeholder="Nome do posto"
-              />
+              <Label htmlFor="fuel_station_id">Posto de Combustível</Label>
+              <Select
+                value={formData.fuel_station_id}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, fuel_station_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar posto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fuelStations.map((station) => (
+                    <SelectItem key={station.id} value={station.id}>
+                      {station.brand} - {station.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
