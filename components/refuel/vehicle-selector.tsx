@@ -5,12 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Car, Gauge, Calendar, TrendingUp } from "lucide-react"
+import { createBrowserClient } from "@supabase/ssr"
 
 interface VehicleStats {
   lastOdometer: number
   avgEfficiency: number
   lastRefuelDate: string
   totalRefuels: number
+}
+
+interface Vehicle {
+  id: string
+  license_plate: string
+  vehicle_internal_number: string
+  make: string
+  model: string
 }
 
 interface VehicleSelectorProps {
@@ -20,32 +29,106 @@ interface VehicleSelectorProps {
 }
 
 export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleStats }: VehicleSelectorProps) {
-  const [vehicles, setVehicles] = useState<any[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [vehicleStats, setVehicleStats] = useState<VehicleStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Mock data - replace with actual API call
-    const mockVehicles = [
-      { id: "VH001", license_plate: "12-AB-34", make: "Toyota", model: "Corolla" },
-      { id: "VH002", license_plate: "56-CD-78", make: "Volkswagen", model: "Golf" },
-      { id: "VH003", license_plate: "90-EF-12", make: "Ford", model: "Focus" },
-    ]
-    setVehicles(mockVehicles)
+    fetchVehicles()
   }, [])
 
   useEffect(() => {
     if (selectedVehicle) {
-      // Mock stats - replace with actual API call
-      const mockStats = {
-        lastOdometer: 45230,
-        avgEfficiency: 7.2,
-        lastRefuelDate: "2024-01-15",
-        totalRefuels: 23,
-      }
-      setVehicleStats(mockStats)
-      onVehicleStats(mockStats)
+      fetchVehicleStats(selectedVehicle)
     }
-  }, [selectedVehicle, onVehicleStats])
+  }, [selectedVehicle])
+
+  const fetchVehicles = async () => {
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      )
+
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, license_plate, vehicle_internal_number, make, model")
+        .eq("is_active", true)
+        .order("vehicle_internal_number")
+
+      if (error) {
+        console.error("Error fetching vehicles:", error)
+        return
+      }
+
+      setVehicles(data || [])
+    } catch (error) {
+      console.error("Error fetching vehicles:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchVehicleStats = async (vehicleId: string) => {
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      )
+
+      const { data: refuelData, error } = await supabase
+        .from("refuel_records")
+        .select("refuel_date, odometer_reading, liters, calculated_odometer_difference")
+        .eq("vehicle_id", vehicleId)
+        .order("refuel_date", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching vehicle stats:", error)
+        return
+      }
+
+      if (refuelData && refuelData.length > 0) {
+        const lastRefuel = refuelData[0]
+        const totalRefuels = refuelData.length
+
+        // Calculate average efficiency
+        const efficiencyRecords = refuelData.filter((r) => r.calculated_odometer_difference && r.liters)
+        const avgEfficiency =
+          efficiencyRecords.length > 0
+            ? efficiencyRecords.reduce((sum, r) => sum + (r.liters / r.calculated_odometer_difference!) * 100, 0) /
+              efficiencyRecords.length
+            : 0
+
+        const stats = {
+          lastOdometer: lastRefuel.odometer_reading,
+          avgEfficiency: Math.round(avgEfficiency * 10) / 10,
+          lastRefuelDate: new Date(lastRefuel.refuel_date).toLocaleDateString("pt-PT"),
+          totalRefuels,
+        }
+
+        setVehicleStats(stats)
+        onVehicleStats(stats)
+      }
+    } catch (error) {
+      console.error("Error fetching vehicle stats:", error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Car className="h-5 w-5" />
+            Vehicle Selection
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-muted-foreground">Loading vehicles...</div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -64,10 +147,8 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
             {vehicles.map((vehicle) => (
               <SelectItem key={vehicle.id} value={vehicle.id}>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{vehicle.license_plate}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {vehicle.make} {vehicle.model}
-                  </span>
+                  <span className="font-medium">{vehicle.vehicle_internal_number}</span>
+                  <span className="text-sm text-muted-foreground">{vehicle.license_plate}</span>
                 </div>
               </SelectItem>
             ))}

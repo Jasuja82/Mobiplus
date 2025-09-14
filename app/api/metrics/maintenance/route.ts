@@ -35,71 +35,159 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Fetch locations
+    const { data: locations } = await supabase.from("locations").select("id, name").eq("is_active", true)
+
+    // Fetch departments
+    const { data: departments } = await supabase.from("departments").select("id, name").eq("is_active", true)
+
+    // Fetch vehicles
+    const { data: vehicles } = await supabase
+      .from("vehicles")
+      .select("id, license_plate, vehicle_internal_number")
+      .eq("is_active", true)
+
+    // Fetch assignment types
+    const { data: assignments } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
+
     // Fetch maintenance data
     const { data: maintenanceData } = await supabase
       .from("maintenance_interventions")
       .select(`
         *,
-        vehicles(license_plate, make, model)
+        vehicles(license_plate, make, model, vehicle_internal_number),
+        maintenance_types(name)
       `)
       .gte("intervention_date", dateFrom.toISOString())
       .lte("intervention_date", dateTo.toISOString())
 
-    // Calculate metrics
+    // Calculate real metrics
     const totalCost = maintenanceData?.reduce((sum, m) => sum + (m.total_cost || 0), 0) || 0
     const totalInterventions = maintenanceData?.length || 0
     const averageCost = totalInterventions > 0 ? totalCost / totalInterventions : 0
 
-    // Mock data for demonstration
-    const mockData = {
-      locations: [
-        { id: "1", name: "São Miguel" },
-        { id: "2", name: "Terceira" },
-      ],
-      departments: [
-        { id: "1", name: "Operações" },
-        { id: "2", name: "Administração" },
-      ],
-      vehicles: [
-        { id: "1", license_plate: "AA-00-AA" },
-        { id: "2", license_plate: "BB-11-BB" },
-      ],
-      assignments: [
-        { id: "operational", name: "Operacional" },
-        { id: "administrative", name: "Administrativo" },
-      ],
+    // Calculate average duration
+    const durationsData = maintenanceData?.filter((m) => m.duration_hours) || []
+    const averageDuration =
+      durationsData.length > 0
+        ? durationsData.reduce((sum, m) => sum + (m.duration_hours || 0), 0) / durationsData.length
+        : 0
+
+    // Calculate monthly trends
+    const monthlyData =
+      maintenanceData?.reduce(
+        (acc, record) => {
+          const month = new Date(record.intervention_date).toLocaleDateString("pt-PT", { month: "short" })
+          if (!acc[month]) {
+            acc[month] = { cost: 0, interventions: 0 }
+          }
+          acc[month].cost += record.total_cost || 0
+          acc[month].interventions += 1
+          return acc
+        },
+        {} as Record<string, { cost: number; interventions: number }>,
+      ) || {}
+
+    const monthlyTrends = Object.entries(monthlyData).map(([month, data]) => ({
+      month,
+      cost: data.cost,
+      interventions: data.interventions,
+    }))
+
+    // Calculate maintenance types breakdown
+    const typeData =
+      maintenanceData?.reduce(
+        (acc, record) => {
+          const type = record.maintenance_types?.name || "Other"
+          if (!acc[type]) {
+            acc[type] = { count: 0, cost: 0 }
+          }
+          acc[type].count += 1
+          acc[type].cost += record.total_cost || 0
+          return acc
+        },
+        {} as Record<string, { count: number; cost: number }>,
+      ) || {}
+
+    const maintenanceTypes = Object.entries(typeData).map(([name, data]) => ({
+      name,
+      value: data.count,
+      cost: data.cost,
+    }))
+
+    // Calculate vehicle ranking by maintenance cost
+    const vehicleRanking =
+      vehicles
+        ?.map((vehicle) => {
+          const vehicleCost =
+            maintenanceData
+              ?.filter((m) => m.vehicle_id === vehicle.id)
+              .reduce((sum, m) => sum + (m.total_cost || 0), 0) || 0
+          return {
+            vehicle: vehicle.license_plate,
+            cost: vehicleCost,
+          }
+        })
+        .filter((v) => v.cost > 0)
+        .sort((a, b) => b.cost - a.cost) || []
+
+    // Fetch upcoming maintenance
+    const { data: upcomingMaintenance } = await supabase
+      .from("maintenance_interventions")
+      .select(`
+        *,
+        vehicles(license_plate),
+        maintenance_types(name)
+      `)
+      .gte("scheduled_date", new Date().toISOString())
+      .eq("status", "scheduled")
+      .order("scheduled_date", { ascending: true })
+      .limit(10)
+
+    const upcomingMaintenanceFormatted =
+      upcomingMaintenance?.map((m) => ({
+        vehicle: m.vehicles?.license_plate || "Unknown",
+        type: m.maintenance_types?.name || "Unknown",
+        date: new Date(m.scheduled_date).toLocaleDateString("pt-PT"),
+        estimatedCost: m.estimated_cost || 0,
+      })) || []
+
+    // Calculate percentage changes
+    const previousPeriodStart = new Date(dateFrom)
+    previousPeriodStart.setMonth(previousPeriodStart.getMonth() - 1)
+    const previousPeriodEnd = new Date(dateFrom)
+
+    const { data: previousData } = await supabase
+      .from("maintenance_interventions")
+      .select("total_cost")
+      .gte("intervention_date", previousPeriodStart.toISOString())
+      .lt("intervention_date", previousPeriodEnd.toISOString())
+
+    const previousCost = previousData?.reduce((sum, m) => sum + (m.total_cost || 0), 0) || 0
+    const previousInterventions = previousData?.length || 0
+
+    const costChange = previousCost > 0 ? ((totalCost - previousCost) / previousCost) * 100 : 0
+    const interventionsChange =
+      previousInterventions > 0 ? ((totalInterventions - previousInterventions) / previousInterventions) * 100 : 0
+
+    const responseData = {
+      locations: locations || [],
+      departments: departments || [],
+      vehicles: vehicles || [],
+      assignments: assignments || [],
       totalCost,
       totalInterventions,
       averageCost,
-      averageDuration: 4.5,
-      costChange: 12.5,
-      interventionsChange: 8.3,
-      monthlyTrends: [
-        { month: "Jan", cost: 2500, interventions: 12 },
-        { month: "Fev", cost: 3200, interventions: 15 },
-        { month: "Mar", cost: 2800, interventions: 13 },
-        { month: "Abr", cost: 3500, interventions: 18 },
-        { month: "Mai", cost: 2900, interventions: 14 },
-        { month: "Jun", cost: 3100, interventions: 16 },
-      ],
-      maintenanceTypes: [
-        { name: "Preventiva", value: 45, cost: 15000 },
-        { name: "Corretiva", value: 30, cost: 12000 },
-        { name: "Preditiva", value: 15, cost: 8000 },
-        { name: "Emergência", value: 10, cost: 5000 },
-      ],
-      vehicleRanking: [
-        { vehicle: "AA-00-AA", cost: 4500 },
-        { vehicle: "BB-11-BB", cost: 3200 },
-        { vehicle: "CC-22-CC", cost: 2800 },
-      ],
-      upcomingMaintenance: [
-        { vehicle: "AA-00-AA", type: "Revisão", date: "2024-01-15", estimatedCost: 350 },
-        { vehicle: "BB-11-BB", type: "Pneus", date: "2024-01-20", estimatedCost: 280 },
-      ],
+      averageDuration,
+      costChange,
+      interventionsChange,
+      monthlyTrends,
+      maintenanceTypes,
+      vehicleRanking,
+      upcomingMaintenance: upcomingMaintenanceFormatted,
     }
 
-    return NextResponse.json(mockData)
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error("Error fetching maintenance metrics:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

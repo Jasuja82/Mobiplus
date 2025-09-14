@@ -50,7 +50,6 @@ export async function GET(request: Request) {
       })
     }
 
-    // Transform data for frontend
     const transformedLogs =
       logs?.map((log) => ({
         id: log.id,
@@ -69,32 +68,12 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error("Error fetching audit logs:", error)
-
-    // Return mock data as fallback
-    const mockLogs = [
+    return NextResponse.json(
       {
-        id: "1",
-        timestamp: "2024-01-15 10:30:00",
-        user_email: "admin@mobiazores.com",
-        action: "CREATE",
-        resource: "Vehicle",
-        ip_address: "192.168.1.100",
-        status: "success",
+        logs: [],
+        error: "Failed to fetch audit logs",
       },
-      {
-        id: "2",
-        timestamp: "2024-01-15 09:15:00",
-        user_email: "manager@mobiazores.com",
-        action: "UPDATE",
-        resource: "Refuel Record",
-        ip_address: "192.168.1.101",
-        status: "success",
-      },
-    ]
-
-    return NextResponse.json({
-      logs: mockLogs,
-      total: mockLogs.length,
-    })
+      { status: 500 },
+    )
   }
 }

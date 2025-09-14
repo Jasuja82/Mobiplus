@@ -4,4 +4,3 @@ export interface VehicleCategory {
   description: string | null
   created_at: string
 }
-

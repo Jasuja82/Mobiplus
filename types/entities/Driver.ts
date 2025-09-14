@@ -10,4 +10,3 @@ export interface Driver {
   created_at: string
   updated_at: string
 }
-

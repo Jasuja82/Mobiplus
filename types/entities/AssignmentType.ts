@@ -5,4 +5,3 @@ export interface AssignmentType {
   created_at: string
   updated_at: string
 }
-

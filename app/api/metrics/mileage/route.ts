@@ -35,74 +35,182 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Mock data for demonstration
-    const mockData = {
-      locations: [
-        { id: "1", name: "São Miguel" },
-        { id: "2", name: "Terceira" },
-      ],
-      departments: [
-        { id: "1", name: "Operações" },
-        { id: "2", name: "Administração" },
-      ],
-      vehicles: [
-        { id: "1", license_plate: "AA-00-AA" },
-        { id: "2", license_plate: "BB-11-BB" },
-      ],
-      assignments: [
-        { id: "operational", name: "Operacional" },
-        { id: "administrative", name: "Administrativo" },
-      ],
-      totalKilometers: 125000,
-      averageDaily: 285,
-      utilizationRate: 78.5,
-      efficiency: 12.8,
-      totalTrips: 1250,
-      kilometersChange: 8.7,
-      tripsChange: 12.3,
-      monthlyTrends: [
-        { month: "Jan", kilometers: 18500, trips: 185 },
-        { month: "Fev", kilometers: 22000, trips: 220 },
-        { month: "Mar", kilometers: 19800, trips: 198 },
-        { month: "Abr", kilometers: 24500, trips: 245 },
-        { month: "Mai", kilometers: 21200, trips: 212 },
-        { month: "Jun", kilometers: 23000, trips: 230 },
-      ],
-      vehicleUtilization: [
-        { vehicle: "AA-00-AA", utilization: 85 },
-        { vehicle: "BB-11-BB", utilization: 72 },
-        { vehicle: "CC-22-CC", utilization: 68 },
-        { vehicle: "DD-33-DD", utilization: 91 },
-      ],
-      utilizationDistribution: [
-        { range: "0-25%", vehicles: 2 },
-        { range: "26-50%", vehicles: 5 },
-        { range: "51-75%", vehicles: 8 },
-        { range: "76-100%", vehicles: 12 },
-      ],
-      efficiencyTrends: [
-        { month: "Jan", efficiency: 12.2 },
-        { month: "Fev", efficiency: 12.8 },
-        { month: "Mar", efficiency: 12.5 },
-        { month: "Abr", efficiency: 13.1 },
-        { month: "Mai", efficiency: 12.9 },
-        { month: "Jun", efficiency: 13.0 },
-      ],
-      vehicleEfficiency: [
-        { vehicle: "AA-00-AA", efficiency: 13.5 },
-        { vehicle: "BB-11-BB", efficiency: 11.8 },
-        { vehicle: "CC-22-CC", efficiency: 12.2 },
-        { vehicle: "DD-33-DD", efficiency: 14.1 },
-      ],
-      vehicleRanking: [
-        { vehicle: "AA-00-AA", kilometers: 35000 },
-        { vehicle: "BB-11-BB", kilometers: 28500 },
-        { vehicle: "CC-22-CC", kilometers: 22000 },
-        { vehicle: "DD-33-DD", kilometers: 39500 },
-      ],
+    // Fetch locations
+    const { data: locations } = await supabase.from("locations").select("id, name").eq("is_active", true)
+
+    // Fetch departments
+    const { data: departments } = await supabase.from("departments").select("id, name").eq("is_active", true)
+
+    // Fetch vehicles
+    const { data: vehicles } = await supabase
+      .from("vehicles")
+      .select("id, license_plate, vehicle_internal_number")
+      .eq("is_active", true)
+
+    // Fetch assignment types
+    const { data: assignments } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
+
+    // Fetch refuel data to calculate mileage metrics
+    const { data: refuelData } = await supabase
+      .from("refuel_records")
+      .select(`
+        *,
+        vehicles(license_plate, make, model)
+      `)
+      .gte("refuel_date", dateFrom.toISOString())
+      .lte("refuel_date", dateTo.toISOString())
+      .not("calculated_odometer_difference", "is", null)
+      .order("refuel_date", { ascending: true })
+
+    // Calculate real metrics
+    const totalKilometers = refuelData?.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0) || 0
+    const totalTrips = refuelData?.length || 0
+    const daysInPeriod = Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24))
+    const averageDaily = daysInPeriod > 0 ? totalKilometers / daysInPeriod : 0
+
+    // Calculate utilization rate (assuming 8 hours/day as full utilization)
+    const utilizationRate =
+      totalTrips > 0 ? Math.min((totalTrips / (daysInPeriod * vehicles?.length || 1)) * 100, 100) : 0
+
+    // Calculate efficiency (km per liter)
+    const totalLiters = refuelData?.reduce((sum, r) => sum + (r.liters || 0), 0) || 0
+    const efficiency = totalLiters > 0 ? totalKilometers / totalLiters : 0
+
+    // Calculate monthly trends
+    const monthlyData =
+      refuelData?.reduce(
+        (acc, record) => {
+          const month = new Date(record.refuel_date).toLocaleDateString("pt-PT", { month: "short" })
+          if (!acc[month]) {
+            acc[month] = { kilometers: 0, trips: 0 }
+          }
+          acc[month].kilometers += record.calculated_odometer_difference || 0
+          acc[month].trips += 1
+          return acc
+        },
+        {} as Record<string, { kilometers: number; trips: number }>,
+      ) || {}
+
+    const monthlyTrends = Object.entries(monthlyData).map(([month, data]) => ({
+      month,
+      kilometers: data.kilometers,
+      trips: data.trips,
+    }))
+
+    // Calculate vehicle utilization
+    const vehicleUtilization =
+      vehicles
+        ?.map((vehicle) => {
+          const vehicleRecords = refuelData?.filter((r) => r.vehicle_id === vehicle.id) || []
+          const vehicleKm = vehicleRecords.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0)
+          const utilization =
+            vehicleRecords.length > 0 ? Math.min((vehicleRecords.length / daysInPeriod) * 100, 100) : 0
+          return {
+            vehicle: vehicle.license_plate,
+            utilization: Math.round(utilization),
+          }
+        })
+        .filter((v) => v.utilization > 0) || []
+
+    // Calculate utilization distribution
+    const utilizationRanges = [
+      { range: "0-25%", vehicles: 0 },
+      { range: "26-50%", vehicles: 0 },
+      { range: "51-75%", vehicles: 0 },
+      { range: "76-100%", vehicles: 0 },
+    ]
+
+    vehicleUtilization.forEach((v) => {
+      if (v.utilization <= 25) utilizationRanges[0].vehicles++
+      else if (v.utilization <= 50) utilizationRanges[1].vehicles++
+      else if (v.utilization <= 75) utilizationRanges[2].vehicles++
+      else utilizationRanges[3].vehicles++
+    })
+
+    // Calculate efficiency trends by month
+    const efficiencyTrends = Object.entries(monthlyData).map(([month, data]) => {
+      const monthRecords =
+        refuelData?.filter((r) => new Date(r.refuel_date).toLocaleDateString("pt-PT", { month: "short" }) === month) ||
+        []
+      const monthLiters = monthRecords.reduce((sum, r) => sum + (r.liters || 0), 0)
+      const monthEfficiency = monthLiters > 0 ? data.kilometers / monthLiters : 0
+      return {
+        month,
+        efficiency: Math.round(monthEfficiency * 10) / 10,
+      }
+    })
+
+    // Calculate vehicle efficiency
+    const vehicleEfficiency =
+      vehicles
+        ?.map((vehicle) => {
+          const vehicleRecords = refuelData?.filter((r) => r.vehicle_id === vehicle.id) || []
+          const vehicleKm = vehicleRecords.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0)
+          const vehicleLiters = vehicleRecords.reduce((sum, r) => sum + (r.liters || 0), 0)
+          const efficiency = vehicleLiters > 0 ? vehicleKm / vehicleLiters : 0
+          return {
+            vehicle: vehicle.license_plate,
+            efficiency: Math.round(efficiency * 10) / 10,
+          }
+        })
+        .filter((v) => v.efficiency > 0) || []
+
+    // Calculate vehicle ranking by kilometers
+    const vehicleRanking =
+      vehicles
+        ?.map((vehicle) => {
+          const vehicleKm =
+            refuelData
+              ?.filter((r) => r.vehicle_id === vehicle.id)
+              .reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0) || 0
+          return {
+            vehicle: vehicle.license_plate,
+            kilometers: vehicleKm,
+          }
+        })
+        .filter((v) => v.kilometers > 0)
+        .sort((a, b) => b.kilometers - a.kilometers) || []
+
+    // Calculate percentage changes
+    const previousPeriodStart = new Date(dateFrom)
+    previousPeriodStart.setMonth(previousPeriodStart.getMonth() - 1)
+    const previousPeriodEnd = new Date(dateFrom)
+
+    const { data: previousData } = await supabase
+      .from("refuel_records")
+      .select("calculated_odometer_difference")
+      .gte("refuel_date", previousPeriodStart.toISOString())
+      .lt("refuel_date", previousPeriodEnd.toISOString())
+      .not("calculated_odometer_difference", "is", null)
+
+    const previousKilometers = previousData?.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0) || 0
+    const previousTrips = previousData?.length || 0
+
+    const kilometersChange =
+      previousKilometers > 0 ? ((totalKilometers - previousKilometers) / previousKilometers) * 100 : 0
+    const tripsChange = previousTrips > 0 ? ((totalTrips - previousTrips) / previousTrips) * 100 : 0
+
+    const responseData = {
+      locations: locations || [],
+      departments: departments || [],
+      vehicles: vehicles || [],
+      assignments: assignments || [],
+      totalKilometers,
+      averageDaily: Math.round(averageDaily),
+      utilizationRate: Math.round(utilizationRate * 10) / 10,
+      efficiency: Math.round(efficiency * 10) / 10,
+      totalTrips,
+      kilometersChange: Math.round(kilometersChange * 10) / 10,
+      tripsChange: Math.round(tripsChange * 10) / 10,
+      monthlyTrends,
+      vehicleUtilization,
+      utilizationDistribution: utilizationRanges,
+      efficiencyTrends,
+      vehicleEfficiency,
+      vehicleRanking,
     }
 
-    return NextResponse.json(mockData)
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error("Error fetching mileage metrics:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

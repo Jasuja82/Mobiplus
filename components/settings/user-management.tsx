@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Users, UserPlus, MoreHorizontal, Edit, Trash2, Shield } from "lucide-react"
+import { createBrowserClient } from "@supabase/ssr"
 
 interface User {
   id: string
@@ -17,14 +18,15 @@ interface User {
   name: string
   role: string
   department: string
-  status: string
-  last_login: string
+  is_active: boolean
+  last_login: string | null
   created_at: string
 }
 
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
   const [showAddUser, setShowAddUser] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [newUser, setNewUser] = useState({
     email: "",
     name: "",
@@ -38,42 +40,36 @@ export function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockUsers: User[] = [
-        {
-          id: "1",
-          email: "admin@mobiazores.com",
-          name: "System Admin",
-          role: "admin",
-          department: "IT",
-          status: "active",
-          last_login: "2024-01-15 10:30:00",
-          created_at: "2024-01-01",
-        },
-        {
-          id: "2",
-          email: "manager@mobiazores.com",
-          name: "Fleet Manager",
-          role: "fleet_manager",
-          department: "Transport",
-          status: "active",
-          last_login: "2024-01-15 09:15:00",
-          created_at: "2024-01-02",
-        },
-        {
-          id: "3",
-          email: "tech@mobiazores.com",
-          name: "Maintenance Tech",
-          role: "maintenance_tech",
-          department: "Maintenance",
-          status: "active",
-          last_login: "2024-01-14 16:45:00",
-          created_at: "2024-01-03",
-        },
-      ]
-      setUsers(mockUsers)
+      setLoading(true)
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      )
+
+      const { data, error } = await supabase
+        .from("users")
+        .select(`
+          id,
+          email,
+          name,
+          role,
+          department,
+          is_active,
+          last_login,
+          created_at
+        `)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching users:", error)
+        return
+      }
+
+      setUsers(data || [])
     } catch (error) {
       console.error("Error fetching users:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -124,6 +120,22 @@ export function UserManagement() {
     }
   }
 
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            User Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-muted-foreground">Loading users...</div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -140,58 +152,68 @@ export function UserManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={getRoleBadgeVariant(user.role) as any}>{user.role}</Badge>
-                  </TableCell>
-                  <TableCell>{user.department}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.status === "active" ? "default" : "secondary"}>{user.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{user.last_login}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit User
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Shield className="mr-2 h-4 w-4" />
-                          Reset Password
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete User
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {users.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              No users found. Add your first user to get started.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Login</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={getRoleBadgeVariant(user.role) as any}>{user.role}</Badge>
+                    </TableCell>
+                    <TableCell>{user.department}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.is_active ? "default" : "secondary"}>
+                        {user.is_active ? "active" : "inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {user.last_login ? new Date(user.last_login).toLocaleDateString("pt-PT") : "Never"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit User
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Shield className="mr-2 h-4 w-4" />
+                            Reset Password
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteUser(user.id)} className="text-red-600">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete User
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

@@ -14,4 +14,3 @@ export interface RefuelRecord {
   created_at: string
   updated_at: string
 }
-

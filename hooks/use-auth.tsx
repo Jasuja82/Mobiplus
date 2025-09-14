@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, createContext, useContext } from "react"
+import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 
 interface User {
@@ -24,39 +24,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    // Return a mock auth object for development
-    return {
-      user: {
-        id: "mock-user-id",
-        email: "admin@mobiazores.com",
-        name: "System Admin",
-        role: "admin",
-        department: "IT",
-        assigned_vehicles: [],
-      },
-      loading: false,
-      signIn: async (email: string, password: string) => {
-        console.log("Mock sign in:", email)
-        return {}
-      },
-      signUp: async (email: string, password: string) => {
-        console.log("Mock sign up:", email)
-        return {}
-      },
-      signOut: async () => {
-        console.log("Mock sign out")
-      },
-      hasRole: (role: string) => role === "admin",
-      hasAnyRole: (roles: string[]) => roles.includes("admin"),
-    }
-  }
-  return context
+interface AuthProviderProps {
+  children: ReactNode
 }
 
-export function useSupabaseAuth(): AuthContextType {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -73,7 +45,6 @@ export function useSupabaseAuth(): AuthContextType {
       } = await supabase.auth.getSession()
 
       if (session?.user) {
-        // Get user profile
         const { data: profile } = await supabase.from("users").select("*").eq("id", session.user.id).single()
 
         if (profile) {
@@ -146,7 +117,7 @@ export function useSupabaseAuth(): AuthContextType {
     return user ? roles.includes(user.role) : false
   }
 
-  return {
+  const value = {
     user,
     loading,
     signIn,
@@ -155,4 +126,14 @@ export function useSupabaseAuth(): AuthContextType {
     hasRole,
     hasAnyRole,
   }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
 }

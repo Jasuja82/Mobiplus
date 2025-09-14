@@ -6,4 +6,3 @@ export interface MaintenanceCategory {
   default_interval_months: number | null
   created_at: string
 }
-

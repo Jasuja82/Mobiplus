@@ -35,87 +35,172 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch fuel data
+    // Fetch locations
+    const { data: locations } = await supabase.from("locations").select("id, name").eq("is_active", true)
+
+    // Fetch departments
+    const { data: departments } = await supabase.from("departments").select("id, name").eq("is_active", true)
+
+    // Fetch vehicles
+    const { data: vehicles } = await supabase
+      .from("vehicles")
+      .select("id, license_plate, vehicle_internal_number")
+      .eq("is_active", true)
+
+    // Fetch assignment types
+    const { data: assignments } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
+
+    // Fetch fuel data with related information
     const { data: fuelData } = await supabase
       .from("refuel_records")
       .select(`
         *,
-        vehicles(license_plate, make, model)
+        vehicles(license_plate, make, model, vehicle_internal_number),
+        fuel_stations(name),
+        drivers(name)
       `)
       .gte("refuel_date", dateFrom.toISOString())
       .lte("refuel_date", dateTo.toISOString())
 
-    // Calculate metrics
-    const totalCost = fuelData?.reduce((sum, r) => sum + r.total_cost, 0) || 0
-    const totalLiters = fuelData?.reduce((sum, r) => sum + r.liters, 0) || 0
+    // Calculate real metrics from data
+    const totalCost = fuelData?.reduce((sum, r) => sum + (r.total_cost || 0), 0) || 0
+    const totalLiters = fuelData?.reduce((sum, r) => sum + (r.liters || 0), 0) || 0
     const averagePrice = totalLiters > 0 ? totalCost / totalLiters : 0
     const totalRefuels = fuelData?.length || 0
 
-    // Mock data for demonstration
-    const mockData = {
-      locations: [
-        { id: "1", name: "São Miguel" },
-        { id: "2", name: "Terceira" },
-      ],
-      departments: [
-        { id: "1", name: "Operações" },
-        { id: "2", name: "Administração" },
-      ],
-      vehicles: [
-        { id: "1", license_plate: "AA-00-AA" },
-        { id: "2", license_plate: "BB-11-BB" },
-      ],
-      assignments: [
-        { id: "operational", name: "Operacional" },
-        { id: "administrative", name: "Administrativo" },
-      ],
+    // Calculate average consumption
+    const consumptionData = fuelData?.filter((r) => r.calculated_odometer_difference && r.liters) || []
+    const averageConsumption =
+      consumptionData.length > 0
+        ? consumptionData.reduce((sum, r) => sum + (r.liters / r.calculated_odometer_difference) * 100, 0) /
+          consumptionData.length
+        : 0
+
+    // Calculate monthly trends
+    const monthlyData =
+      fuelData?.reduce(
+        (acc, record) => {
+          const month = new Date(record.refuel_date).toLocaleDateString("pt-PT", { month: "short" })
+          if (!acc[month]) {
+            acc[month] = { cost: 0, liters: 0 }
+          }
+          acc[month].cost += record.total_cost || 0
+          acc[month].liters += record.liters || 0
+          return acc
+        },
+        {} as Record<string, { cost: number; liters: number }>,
+      ) || {}
+
+    const monthlyTrends = Object.entries(monthlyData).map(([month, data]) => ({
+      month,
+      cost: data.cost,
+      liters: data.liters,
+    }))
+
+    // Calculate price history by month
+    const priceHistory = Object.entries(monthlyData).map(([month, data]) => ({
+      date: month,
+      price: data.liters > 0 ? data.cost / data.liters : 0,
+    }))
+
+    // Calculate vehicle efficiency
+    const vehicleEfficiency =
+      vehicles
+        ?.map((vehicle) => {
+          const vehicleRecords =
+            fuelData?.filter((r) => r.vehicle_id === vehicle.id && r.calculated_odometer_difference && r.liters) || []
+          const avgConsumption =
+            vehicleRecords.length > 0
+              ? vehicleRecords.reduce((sum, r) => sum + (r.liters / r.calculated_odometer_difference) * 100, 0) /
+                vehicleRecords.length
+              : 0
+          return {
+            vehicle: vehicle.license_plate,
+            consumption: avgConsumption,
+          }
+        })
+        .filter((v) => v.consumption > 0) || []
+
+    // Calculate station costs
+    const stationData =
+      fuelData?.reduce(
+        (acc, record) => {
+          const station = record.fuel_stations?.name || "Unknown"
+          if (!acc[station]) {
+            acc[station] = { cost: 0, liters: 0 }
+          }
+          acc[station].cost += record.total_cost || 0
+          acc[station].liters += record.liters || 0
+          return acc
+        },
+        {} as Record<string, { cost: number; liters: number }>,
+      ) || {}
+
+    const stationCosts = Object.entries(stationData).map(([station, data]) => ({
+      station,
+      cost: data.cost,
+    }))
+
+    const stationPrices = Object.entries(stationData).map(([station, data]) => ({
+      station,
+      averagePrice: data.liters > 0 ? data.cost / data.liters : 0,
+    }))
+
+    // Calculate vehicle ranking by cost
+    const vehicleRanking =
+      vehicles
+        ?.map((vehicle) => {
+          const vehicleCost =
+            fuelData?.filter((r) => r.vehicle_id === vehicle.id).reduce((sum, r) => sum + (r.total_cost || 0), 0) || 0
+          return {
+            vehicle: vehicle.license_plate,
+            cost: vehicleCost,
+          }
+        })
+        .filter((v) => v.cost > 0)
+        .sort((a, b) => b.cost - a.cost) || []
+
+    // Calculate percentage changes (comparing to previous period)
+    const previousPeriodStart = new Date(dateFrom)
+    previousPeriodStart.setMonth(previousPeriodStart.getMonth() - 1)
+    const previousPeriodEnd = new Date(dateFrom)
+
+    const { data: previousData } = await supabase
+      .from("refuel_records")
+      .select("total_cost, liters")
+      .gte("refuel_date", previousPeriodStart.toISOString())
+      .lt("refuel_date", previousPeriodEnd.toISOString())
+
+    const previousCost = previousData?.reduce((sum, r) => sum + (r.total_cost || 0), 0) || 0
+    const previousLiters = previousData?.reduce((sum, r) => sum + (r.liters || 0), 0) || 0
+    const previousRefuels = previousData?.length || 0
+
+    const costChange = previousCost > 0 ? ((totalCost - previousCost) / previousCost) * 100 : 0
+    const litersChange = previousLiters > 0 ? ((totalLiters - previousLiters) / previousLiters) * 100 : 0
+    const refuelsChange = previousRefuels > 0 ? ((totalRefuels - previousRefuels) / previousRefuels) * 100 : 0
+
+    const responseData = {
+      locations: locations || [],
+      departments: departments || [],
+      vehicles: vehicles || [],
+      assignments: assignments || [],
       totalCost,
       totalLiters,
       averagePrice,
-      averageConsumption: 8.5,
+      averageConsumption,
       totalRefuels,
-      costChange: 15.2,
-      litersChange: 12.8,
-      refuelsChange: 5.4,
-      monthlyTrends: [
-        { month: "Jan", cost: 4500, liters: 2800 },
-        { month: "Fev", cost: 5200, liters: 3200 },
-        { month: "Mar", cost: 4800, liters: 2950 },
-        { month: "Abr", cost: 5500, liters: 3400 },
-        { month: "Mai", cost: 4900, liters: 3000 },
-        { month: "Jun", cost: 5100, liters: 3150 },
-      ],
-      priceHistory: [
-        { date: "2024-01", price: 1.45 },
-        { date: "2024-02", price: 1.48 },
-        { date: "2024-03", price: 1.52 },
-        { date: "2024-04", price: 1.49 },
-        { date: "2024-05", price: 1.51 },
-        { date: "2024-06", price: 1.47 },
-      ],
-      vehicleEfficiency: [
-        { vehicle: "AA-00-AA", consumption: 7.8 },
-        { vehicle: "BB-11-BB", consumption: 9.2 },
-        { vehicle: "CC-22-CC", consumption: 8.5 },
-      ],
-      stationCosts: [
-        { station: "Galp Ponta Delgada", cost: 12500 },
-        { station: "BP Angra", cost: 8900 },
-        { station: "Repsol Lagoa", cost: 6700 },
-      ],
-      stationPrices: [
-        { station: "Galp Ponta Delgada", averagePrice: 1.48 },
-        { station: "BP Angra", averagePrice: 1.52 },
-        { station: "Repsol Lagoa", averagePrice: 1.45 },
-      ],
-      vehicleRanking: [
-        { vehicle: "AA-00-AA", cost: 5500 },
-        { vehicle: "BB-11-BB", cost: 4200 },
-        { vehicle: "CC-22-CC", cost: 3800 },
-      ],
+      costChange,
+      litersChange,
+      refuelsChange,
+      monthlyTrends,
+      priceHistory,
+      vehicleEfficiency,
+      stationCosts,
+      stationPrices,
+      vehicleRanking,
     }
 
-    return NextResponse.json(mockData)
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error("Error fetching fuel metrics:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

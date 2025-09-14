@@ -11,4 +11,3 @@ export interface Location {
   created_at: string
   updated_at: string
 }
-
