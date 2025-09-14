@@ -1,141 +1,34 @@
-// Database types and form schemas
-export * from "./forms"
+import type { Database } from "./index"
 
-// Re-export commonly used schemas for convenience
-export {
-  VehicleFormSchema,
-  RefuelFormSchema,
-  MaintenanceScheduleFormSchema,
-  DriverFormSchema,
-  LocationFormSchema,
-  DepartmentFormSchema,
-  type VehicleFormData,
-  type RefuelFormData,
-  type MaintenanceScheduleFormData,
-  type DriverFormData,
-  type LocationFormData,
-  type DepartmentFormData,
-} from "./forms"
+// Re-export the Database type for Supabase
+export type { Database }
 
-// Database entity types
-export interface Vehicle {
-  id: string
-  license_plate: string
-  vehicle_internal_number: string
-  make: string
-  model: string
-  year: number
-  vin?: string
-  category_id?: string
-  department_id?: string
-  fuel_type: "gasoline" | "diesel" | "electric" | "hybrid"
-  fuel_capacity?: number
-  status: "active" | "maintenance" | "inactive" | "retired"
-  purchase_date?: string
-  purchase_price?: number
-  current_mileage: number
-  insurance_policy?: string
-  insurance_expiry?: string
-  inspection_expiry?: string
-  notes?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+// Supabase helper types
+export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"]
+export type TablesInsert<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Insert"]
+export type TablesUpdate<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Update"]
 
-export interface Department {
-  id: string
-  name: string
-  description?: string
-  budget?: number
-  manager_id?: string
-  location_id?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+// Convenience type aliases for common operations
+export type VehicleRow = Tables<"vehicles">
+export type VehicleInsert = TablesInsert<"vehicles">
+export type VehicleUpdate = TablesUpdate<"vehicles">
 
-export interface VehicleCategory {
-  id: string
-  name: string
-  description?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+export type RefuelRecordRow = Tables<"refuel_records">
+export type RefuelRecordInsert = TablesInsert<"refuel_records">
+export type RefuelRecordUpdate = TablesUpdate<"refuel_records">
 
-export interface Driver {
-  id: string
-  user_id: string
-  license_number: string
-  license_categories: string[]
-  license_expiry: string
-  medical_certificate_expiry: string
-  department_id: string
-  is_active: boolean
-  notes?: string
-  created_at: string
-  updated_at: string
-}
+export type DriverRow = Tables<"drivers">
+export type DriverInsert = TablesInsert<"drivers">
+export type DriverUpdate = TablesUpdate<"drivers">
 
-export interface Location {
-  id: string
-  name: string
-  address?: string
-  city?: string
-  region?: string
-  country?: string
-  internal_number?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+export type DepartmentRow = Tables<"departments">
+export type DepartmentInsert = TablesInsert<"departments">
+export type DepartmentUpdate = TablesUpdate<"departments">
 
-export interface RefuelRecord {
-  id: string
-  vehicle_id: string
-  driver_id?: string
-  refuel_date: string
-  odometer_reading: number
-  liters: number
-  cost_per_liter: number
-  total_cost: number
-  fuel_station_id?: string
-  fuel_station_internal_number?: string
-  receipt_number?: string
-  notes?: string
-  calculated_odometer_difference?: number
-  created_at: string
-  updated_at: string
-}
+export type LocationRow = Tables<"locations">
+export type LocationInsert = TablesInsert<"locations">
+export type LocationUpdate = TablesUpdate<"locations">
 
-export interface MaintenanceIntervention {
-  id: string
-  vehicle_id: string
-  maintenance_type_id?: string
-  intervention_date: string
-  scheduled_date?: string
-  odometer_reading?: number
-  description?: string
-  total_cost?: number
-  duration_hours?: number
-  status: "scheduled" | "in_progress" | "completed" | "cancelled"
-  notes?: string
-  created_at: string
-  updated_at: string
-}
-
-// API Response types
-export interface ApiResponse {
-  success: boolean
-  error?: string
-  data?: any
-}
-
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
+export type UserRow = Tables<"users">
+export type UserInsert = TablesInsert<"users">
+export type UserUpdate = TablesUpdate<"users">
