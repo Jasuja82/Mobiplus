@@ -1,9 +1,9 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { DM_Sans, Space_Grotesk } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
-import { PrimeThemeProvider } from "@/components/prime/PrimeThemeProvider"
+import { MaterialThemeProvider } from "@/components/material/MaterialThemeProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
@@ -12,13 +12,13 @@ import { AuthProvider } from "@/hooks/use-auth"
 import { Suspense } from "react"
 import "./globals.css"
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 })
 
-const jetbrainsMono = JetBrains_Mono({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-mono",
   display: "swap",
@@ -38,18 +38,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/primereact@10.8.3/resources/themes/lara-light-cyan/theme.css"
-          id="theme-link"
-        />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primereact@10.8.3/resources/primereact.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeflex@3.3.1/primeflex.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}>
+      <body className={`font-sans ${dmSans.variable} ${spaceGrotesk.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <PrimeThemeProvider>
+          <MaterialThemeProvider>
             <AuthProvider>
               <SettingsProvider>
                 <SidebarProvider>
@@ -62,7 +56,7 @@ export default function RootLayout({
                 </SidebarProvider>
               </SettingsProvider>
             </AuthProvider>
-          </PrimeThemeProvider>
+          </MaterialThemeProvider>
           <Toaster />
         </ThemeProvider>
         <Analytics />

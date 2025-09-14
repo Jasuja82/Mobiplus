@@ -5,80 +5,80 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #4b5563;
-  --card: #f9fafb;
-  --card-foreground: #4b5563;
+  --foreground: #475569;
+  --card: #f1f5f9;
+  --card-foreground: #475569;
   --popover: #ffffff;
-  --popover-foreground: #4b5563;
-  --primary: #0891b2;
+  --popover-foreground: #475569;
+  --primary: #059669;
   --primary-foreground: #ffffff;
-  --secondary: #f97316;
+  --secondary: #10b981;
   --secondary-foreground: #ffffff;
-  --muted: #f9fafb;
-  --muted-foreground: #4b5563;
-  --accent: #f97316;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #10b981;
   --accent-foreground: #ffffff;
-  --destructive: #be123c;
+  --destructive: #d97706;
   --destructive-foreground: #ffffff;
-  --border: #e5e7eb;
+  --border: #e2e8f0;
   --input: #ffffff;
-  --ring: rgba(8, 145, 178, 0.5);
-  --chart-1: #0891b2;
-  --chart-2: #f97316;
-  --chart-3: #4b5563;
-  --chart-4: #d1fae5;
-  --chart-5: #fef9c3;
+  --ring: rgba(5, 150, 105, 0.3);
+  --chart-1: #059669;
+  --chart-2: #10b981;
+  --chart-3: #d97706;
+  --chart-4: #475569;
+  --chart-5: #f1f5f9;
   --radius: 0.5rem;
-  --sidebar: #f9fafb;
-  --sidebar-foreground: #4b5563;
-  --sidebar-primary: #0891b2;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f97316;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #475569;
+  --sidebar-primary: #f1f5f9;
+  --sidebar-primary-foreground: #475569;
+  --sidebar-accent: #10b981;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #e5e7eb;
-  --sidebar-ring: rgba(8, 145, 178, 0.5);
-  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-jetbrains-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "Roboto Mono", monospace;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: rgba(5, 150, 105, 0.3);
+  --font-space-grotesk: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-dm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 .dark {
-  --background: #1f2937;
-  --foreground: #f9fafb;
-  --card: #374151;
-  --card-foreground: #f9fafb;
-  --popover: #374151;
-  --popover-foreground: #f9fafb;
-  --primary: #06b6d4;
-  --primary-foreground: #1f2937;
-  --secondary: #fb923c;
-  --secondary-foreground: #1f2937;
-  --muted: #374151;
-  --muted-foreground: #9ca3af;
-  --accent: #fb923c;
-  --accent-foreground: #1f2937;
-  --destructive: #f87171;
-  --destructive-foreground: #1f2937;
-  --border: #4b5563;
-  --input: #374151;
-  --ring: rgba(6, 182, 212, 0.5);
-  --chart-1: #06b6d4;
-  --chart-2: #fb923c;
-  --chart-3: #9ca3af;
-  --chart-4: #065f46;
-  --chart-5: #92400e;
-  --sidebar: #374151;
-  --sidebar-foreground: #f9fafb;
-  --sidebar-primary: #06b6d4;
-  --sidebar-primary-foreground: #1f2937;
-  --sidebar-accent: #fb923c;
-  --sidebar-accent-foreground: #1f2937;
-  --sidebar-border: #4b5563;
-  --sidebar-ring: rgba(6, 182, 212, 0.5);
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #10b981;
+  --primary-foreground: #0f172a;
+  --secondary: #059669;
+  --secondary-foreground: #0f172a;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #059669;
+  --accent-foreground: #0f172a;
+  --destructive: #f59e0b;
+  --destructive-foreground: #0f172a;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: rgba(16, 185, 129, 0.3);
+  --chart-1: #10b981;
+  --chart-2: #059669;
+  --chart-3: #f59e0b;
+  --chart-4: #94a3b8;
+  --chart-5: #334155;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #334155;
+  --sidebar-primary-foreground: #f1f5f9;
+  --sidebar-accent: #059669;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #334155;
+  --sidebar-ring: rgba(16, 185, 129, 0.3);
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, "Cascadia Code", "Roboto Mono", monospace;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-space-grotesk), ui-monospace, "Cascadia Code", "Roboto Mono", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -126,146 +126,28 @@
   }
 }
 
-.p-card {
+.material-card {
   background: var(--card);
   color: var(--card-foreground);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-}
-
-.p-card .p-card-header {
-  background: transparent;
-  border-bottom: 1px solid var(--border);
-  padding: 1.5rem;
-}
-
-.p-card .p-card-content {
-  padding: 1.5rem;
-}
-
-.p-button {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-  border-radius: var(--radius);
-  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease-in-out;
 }
 
-.p-button:hover {
-  background: color-mix(in srgb, var(--primary) 90%, black);
-  border-color: color-mix(in srgb, var(--primary) 90%, black);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+.material-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
-.p-button.p-button-secondary {
-  background: var(--secondary);
-  border-color: var(--secondary);
-  color: var(--secondary-foreground);
+.material-elevation-1 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
-.p-button.p-button-secondary:hover {
-  background: color-mix(in srgb, var(--secondary) 90%, black);
-  border-color: color-mix(in srgb, var(--secondary) 90%, black);
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+.material-elevation-2 {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
 }
 
-.p-datatable {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.p-datatable .p-datatable-header {
-  background: var(--muted);
-  border-bottom: 1px solid var(--border);
-  padding: 1rem 1.5rem;
-}
-
-.p-datatable .p-datatable-thead > tr > th {
-  background: var(--muted);
-  color: var(--muted-foreground);
-  border-bottom: 1px solid var(--border);
-  padding: 1rem;
-  font-weight: 600;
-}
-
-.p-datatable .p-datatable-tbody > tr > td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.p-datatable .p-datatable-tbody > tr:hover {
-  background: var(--muted);
-}
-
-.p-panel {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-}
-
-.p-panel .p-panel-header {
-  background: var(--muted);
-  border-bottom: 1px solid var(--border);
-  padding: 1rem 1.5rem;
-  font-weight: 600;
-}
-
-.p-panel .p-panel-content {
-  padding: 1.5rem;
-}
-
-.p-chart {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 1rem;
-}
-
-.p-menubar {
-  background: var(--sidebar);
-  border: 1px solid var(--sidebar-border);
-  border-radius: var(--radius);
-}
-
-.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link {
-  color: var(--sidebar-foreground);
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease-in-out;
-}
-
-.p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link:hover {
-  background: var(--sidebar-accent);
-  color: var(--sidebar-accent-foreground);
-}
-
-.p-tag {
-  border-radius: var(--radius-sm);
-  font-weight: 500;
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-}
-
-.p-tag.p-tag-success {
-  background: #22c55e;
-  color: white;
-}
-
-.p-tag.p-tag-warning {
-  background: #f59e0b;
-  color: white;
-}
-
-.p-tag.p-tag-danger {
-  background: #ef4444;
-  color: white;
-}
-
-.p-tag.p-tag-info {
-  background: var(--primary);
-  color: var(--primary-foreground);
+.material-elevation-3 {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
 }

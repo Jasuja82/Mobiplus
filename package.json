@@ -9,7 +9,14 @@
     "start": "next start"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
     "@hookform/resolvers": "^3.10.0",
+    "@mui/icons-material": "^5.15.10",
+    "@mui/material": "latest",
+    "@mui/material-pigment-css": "latest",
+    "@mui/x-charts": "^6.19.1",
+    "@mui/x-data-grid": "^6.19.4",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-avatar": "latest",
     "@radix-ui/react-checkbox": "latest",
@@ -36,8 +43,6 @@
     "lucide-react": "^0.454.0",
     "next": "14.2.16",
     "next-themes": "latest",
-    "primeflex": "^3.3.1",
-    "primeicons": "^7.0.0",
     "primereact": "latest",
     "react": "^18",
     "react-day-picker": "latest",
