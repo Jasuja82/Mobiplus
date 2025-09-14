@@ -1,11 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
-import { AuthProvider } from "@/hooks/use-auth.tsx"
-import SettingsContent from "@/components/settings/settings-content"
+import SettingsClientWrapper from "./settings-client-wrapper"
 
 export default async function SettingsPage() {
   const supabase = await createClient()
 
-  // Get user data server-side for SSR
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser()
@@ -22,11 +20,7 @@ export default async function SettingsPage() {
     }
   }
 
-  return (
-    <AuthProvider initialUser={initialUser}>
-      <SettingsContent />
-    </AuthProvider>
-  )
+  return <SettingsClientWrapper initialUser={initialUser} />
 }
 
 export const dynamic = "force-dynamic"
