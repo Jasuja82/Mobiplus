@@ -12,21 +12,31 @@ import { useEffect, useState } from "react"
 export const dynamic = "force-dynamic"
 
 export default function SettingsPage() {
-  const { user: authUser } = useAuth()
   const [isClient, setIsClient] = useState(false)
+  const { user: authUser } = useAuth()
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     setIsClient(true)
-  }, [])
-
-  useEffect(() => {
-    if (isClient) {
-      setUser(authUser)
-    }
-  }, [isClient, authUser])
+    setUser(authUser)
+  }, [authUser])
 
   const isAdmin = user?.role === "admin"
+
+  // Show loading state during hydration
+  if (!isClient) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <Settings className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-3xl font-bold">System Settings</h1>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
