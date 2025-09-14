@@ -17,7 +17,7 @@ interface VehicleStats {
 interface Vehicle {
   id: string
   license_plate: string
-  vehicle_internal_number: string
+  internal_number: string
   make: string
   model: string
 }
@@ -52,9 +52,9 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
 
       const { data, error } = await supabase
         .from("vehicles")
-        .select("id, license_plate, vehicle_internal_number, make, model")
+        .select("id, license_plate, internal_number, make, model")
         .eq("is_active", true)
-        .order("vehicle_internal_number")
+        .order("internal_number")
 
       if (error) {
         console.error("Error fetching vehicles:", error)
@@ -147,7 +147,7 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
             {vehicles.map((vehicle) => (
               <SelectItem key={vehicle.id} value={vehicle.id}>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{vehicle.vehicle_internal_number}</span>
+                  <span className="font-medium">{vehicle.internal_number}</span>
                   <span className="text-sm text-muted-foreground">{vehicle.license_plate}</span>
                 </div>
               </SelectItem>
