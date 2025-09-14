@@ -1,16 +1,33 @@
 "use client"
 import { Settings, Shield, Users, Database, Bell, Palette } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { RoleGuard } from "@/components/common/permission-guard"
 import { GeneralSettings } from "@/components/settings/general-settings"
 import { NotificationSettings } from "@/components/settings/notification-settings"
 import { SuperuserPanel } from "@/components/settings/superuser-panel"
 import { UserManagement } from "@/components/settings/user-management"
 import { SystemSettings } from "@/components/settings/system-settings"
+import { useAuth } from "@/hooks/use-auth"
+import { useEffect, useState } from "react"
 
 export const dynamic = "force-dynamic"
 
 export default function SettingsPage() {
+  const { user: authUser } = useAuth()
+  const [isClient, setIsClient] = useState(false)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (isClient) {
+      setUser(authUser)
+    }
+  }, [isClient, authUser])
+
+  const isAdmin = user?.role === "admin"
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -22,7 +39,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+        <TabsList className={`grid w-full ${isAdmin ? "grid-cols-2 lg:grid-cols-5" : "grid-cols-2 lg:grid-cols-4"}`}>
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             General
@@ -39,12 +56,12 @@ export default function SettingsPage() {
             <Database className="h-4 w-4" />
             System
           </TabsTrigger>
-          <RoleGuard roles={["admin"]}>
+          {isAdmin && (
             <TabsTrigger value="superuser" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Superuser
             </TabsTrigger>
-          </RoleGuard>
+          )}
         </TabsList>
 
         <TabsContent value="general">
@@ -63,11 +80,11 @@ export default function SettingsPage() {
           <SystemSettings />
         </TabsContent>
 
-        <RoleGuard roles={["admin"]}>
+        {isAdmin && (
           <TabsContent value="superuser">
             <SuperuserPanel />
           </TabsContent>
-        </RoleGuard>
+        )}
       </Tabs>
     </div>
   )
