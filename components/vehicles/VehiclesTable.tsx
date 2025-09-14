@@ -9,7 +9,7 @@ import { Edit, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 interface VehiclesTableProps {
-  vehicles: VehicleWithRelations[]
+  vehicles: (VehicleWithRelations & { latest_odometer?: number })[]
 }
 
 const statusColors = {
@@ -44,7 +44,7 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Matrícula</TableHead>
+                <TableHead>Nº Viatura / Matrícula</TableHead>
                 <TableHead>Marca/Modelo</TableHead>
                 <TableHead>Ano</TableHead>
                 <TableHead>Categoria</TableHead>
@@ -68,7 +68,14 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
               ) : (
                 vehicles.map((vehicle) => (
                   <TableRow key={vehicle.id}>
-                    <TableCell className="font-medium">{vehicle.license_plate}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-primary">
+                          {vehicle.vehicle_number || vehicle.internal_number || "N/A"}
+                        </span>
+                        <span className="text-sm text-muted-foreground">{vehicle.license_plate}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {vehicle.make} {vehicle.model}
                     </TableCell>
@@ -79,7 +86,9 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
                     <TableCell>
                       <Badge className={statusColors[vehicle.status]}>{statusLabels[vehicle.status]}</Badge>
                     </TableCell>
-                    <TableCell>{vehicle.current_mileage.toLocaleString()} km</TableCell>
+                    <TableCell>
+                      {(vehicle.latest_odometer || vehicle.current_mileage || 0).toLocaleString()} km
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link href={`/vehicles/${vehicle.id}`}>

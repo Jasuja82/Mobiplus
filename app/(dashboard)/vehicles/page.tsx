@@ -15,19 +15,31 @@ export default async function VehiclesPage() {
     redirect("/login")
   }
 
-  // Get vehicles with related data
   const { data: vehicles, error } = await supabase
     .from("vehicles")
     .select(`
       *,
       category:vehicle_categories(name),
-      department:departments(name)
+      department:departments(name),
+      latest_refuel:refuel_records(odometer_reading, refuel_date)
     `)
-    .order("created_at", { ascending: false })
+    .order("internal_number")
 
   if (error) {
     console.error("Error fetching vehicles:", error)
   }
+
+  const processedVehicles =
+    vehicles?.map((vehicle) => {
+      // Get the latest refuel record's odometer reading
+      const latestRefuel = vehicle.latest_refuel?.[0]
+      const latestOdometer = latestRefuel?.odometer_reading || vehicle.current_mileage || 0
+
+      return {
+        ...vehicle,
+        latest_odometer: latestOdometer,
+      }
+    }) || []
 
   return (
     <div className="space-y-6">
@@ -44,7 +56,7 @@ export default async function VehiclesPage() {
         </Link>
       </div>
 
-      <VehiclesTable vehicles={vehicles || []} />
+      <VehiclesTable vehicles={processedVehicles} />
     </div>
   )
 }
