@@ -16,7 +16,10 @@ export function PrimeThemeProvider({ children }: PrimeThemeProviderProps) {
   useEffect(() => {
     const themeLink = document.getElementById("theme-link") as HTMLLinkElement
     if (themeLink) {
-      themeLink.href = theme === "dark" ? "/themes/lara-dark-cyan/theme.css" : "/themes/lara-light-cyan/theme.css"
+      themeLink.href =
+        theme === "dark"
+          ? "https://cdn.jsdelivr.net/npm/primereact@10.8.3/resources/themes/lara-dark-cyan/theme.css"
+          : "https://cdn.jsdelivr.net/npm/primereact@10.8.3/resources/themes/lara-light-cyan/theme.css"
     }
   }, [theme])
 

@@ -38,7 +38,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link id="theme-link" rel="stylesheet" href="/themes/lara-light-cyan/theme.css" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/primereact@10.8.3/resources/themes/lara-light-cyan/theme.css"
+          id="theme-link"
+        />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primereact@10.8.3/resources/primereact.min.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/primeflex@3.3.1/primeflex.css" />
       </head>
       <body className={`font-sans ${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
