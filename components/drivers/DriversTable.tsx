@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { MoreHorizontal, Search, Eye, Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
-import type { DriverWithRelations } from "@/types/database"
+import type { DriverWithRelations } from "@/types"
 
 interface DriversTableProps {
   drivers: DriverWithRelations[]
@@ -17,6 +17,9 @@ interface DriversTableProps {
 export function DriversTable({ drivers }: DriversTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
+  console.log("[v0] DriversTable received drivers:", drivers)
+  console.log("[v0] Drivers array length:", drivers?.length || 0)
+
   const filteredDrivers = drivers.filter(
     (driver) =>
       driver.user?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
@@ -24,16 +27,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
       driver.department?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()),
   )
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-PT")
-  }
-
-  const isLicenseExpiringSoon = (expiryDate: string) => {
-    const expiry = new Date(expiryDate)
-    const today = new Date()
-    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    return daysUntilExpiry <= 30
-  }
+  console.log("[v0] Filtered drivers count:", filteredDrivers.length)
 
   return (
     <div className="space-y-4">
@@ -47,6 +41,10 @@ export function DriversTable({ drivers }: DriversTableProps) {
             className="pl-8"
           />
         </div>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Total de condutores: {drivers?.length || 0} | Filtrados: {filteredDrivers.length}
       </div>
 
       <div className="rounded-md border">
@@ -66,7 +64,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
             {filteredDrivers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  Nenhum condutor encontrado
+                  {drivers?.length === 0 ? "Nenhum condutor registado" : "Nenhum condutor encontrado"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -139,4 +137,15 @@ export function DriversTable({ drivers }: DriversTableProps) {
       </div>
     </div>
   )
+}
+
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString("pt-PT")
+}
+
+function isLicenseExpiringSoon(expiryDate: string) {
+  const expiry = new Date(expiryDate)
+  const today = new Date()
+  const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  return daysUntilExpiry <= 30
 }
