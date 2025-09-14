@@ -172,7 +172,7 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
                         )}
                       </TableCell>
                       <TableCell>{record.driver?.user?.name || record.driver?.license_number || "N/A"}</TableCell>
-                      <TableCell>{record.mileage.toLocaleString()} km</TableCell>
+                      <TableCell>{record.mileage ? record.mileage.toLocaleString() : "N/A"} km</TableCell>
                       <TableCell>{record.liters.toFixed(1)}L</TableCell>
                       <TableCell>€{record.cost_per_liter.toFixed(3)}</TableCell>
                       <TableCell className="font-medium">€{record.total_cost.toFixed(2)}</TableCell>
