@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { SettingsProvider } from "@/contexts/SettingsContext"
-import { AuthProvider } from "@/hooks/use-auth.tsx"
+import { AuthProvider } from "@/hooks/use-auth"
 import { Suspense } from "react"
 import "./globals.css"
 
