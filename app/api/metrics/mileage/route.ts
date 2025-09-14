@@ -59,11 +59,11 @@ export async function GET(request: NextRequest) {
       `)
       .gte("refuel_date", dateFrom.toISOString())
       .lte("refuel_date", dateTo.toISOString())
-      .not("calculated_odometer_difference", "is", null)
+      .not("distance_since_last_refuel", "is", null)
       .order("refuel_date", { ascending: true })
 
     // Calculate real metrics
-    const totalKilometers = refuelData?.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0) || 0
+    const totalKilometers = refuelData?.reduce((sum, r) => sum + (r.distance_since_last_refuel || 0), 0) || 0
     const totalTrips = refuelData?.length || 0
     const daysInPeriod = Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24))
     const averageDaily = daysInPeriod > 0 ? totalKilometers / daysInPeriod : 0
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
           if (!acc[month]) {
             acc[month] = { kilometers: 0, trips: 0 }
           }
-          acc[month].kilometers += record.calculated_odometer_difference || 0
+          acc[month].kilometers += record.distance_since_last_refuel || 0
           acc[month].trips += 1
           return acc
         },
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       vehicles
         ?.map((vehicle) => {
           const vehicleRecords = refuelData?.filter((r) => r.vehicle_id === vehicle.id) || []
-          const vehicleKm = vehicleRecords.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0)
+          const vehicleKm = vehicleRecords.reduce((sum, r) => sum + (r.distance_since_last_refuel || 0), 0)
           const utilization =
             vehicleRecords.length > 0 ? Math.min((vehicleRecords.length / daysInPeriod) * 100, 100) : 0
           return {
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       vehicles
         ?.map((vehicle) => {
           const vehicleRecords = refuelData?.filter((r) => r.vehicle_id === vehicle.id) || []
-          const vehicleKm = vehicleRecords.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0)
+          const vehicleKm = vehicleRecords.reduce((sum, r) => sum + (r.distance_since_last_refuel || 0), 0)
           const vehicleLiters = vehicleRecords.reduce((sum, r) => sum + (r.liters || 0), 0)
           const efficiency = vehicleLiters > 0 ? vehicleKm / vehicleLiters : 0
           return {
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
           const vehicleKm =
             refuelData
               ?.filter((r) => r.vehicle_id === vehicle.id)
-              .reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0) || 0
+              .reduce((sum, r) => sum + (r.distance_since_last_refuel || 0), 0) || 0
           return {
             vehicle: vehicle.license_plate,
             kilometers: vehicleKm,
@@ -178,12 +178,12 @@ export async function GET(request: NextRequest) {
 
     const { data: previousData } = await supabase
       .from("refuel_records")
-      .select("calculated_odometer_difference")
+      .select("distance_since_last_refuel")
       .gte("refuel_date", previousPeriodStart.toISOString())
       .lt("refuel_date", previousPeriodEnd.toISOString())
-      .not("calculated_odometer_difference", "is", null)
+      .not("distance_since_last_refuel", "is", null)
 
-    const previousKilometers = previousData?.reduce((sum, r) => sum + (r.calculated_odometer_difference || 0), 0) || 0
+    const previousKilometers = previousData?.reduce((sum, r) => sum + (r.distance_since_last_refuel || 0), 0) || 0
     const previousTrips = previousData?.length || 0
 
     const kilometersChange =

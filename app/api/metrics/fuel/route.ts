@@ -69,10 +69,10 @@ export async function GET(request: NextRequest) {
     const totalRefuels = fuelData?.length || 0
 
     // Calculate average consumption
-    const consumptionData = fuelData?.filter((r) => r.calculated_odometer_difference && r.liters) || []
+    const consumptionData = fuelData?.filter((r) => r.distance_since_last_refuel && r.liters) || []
     const averageConsumption =
       consumptionData.length > 0
-        ? consumptionData.reduce((sum, r) => sum + (r.liters / r.calculated_odometer_difference) * 100, 0) /
+        ? consumptionData.reduce((sum, r) => sum + (r.liters / r.distance_since_last_refuel) * 100, 0) /
           consumptionData.length
         : 0
 
@@ -108,10 +108,10 @@ export async function GET(request: NextRequest) {
       vehicles
         ?.map((vehicle) => {
           const vehicleRecords =
-            fuelData?.filter((r) => r.vehicle_id === vehicle.id && r.calculated_odometer_difference && r.liters) || []
+            fuelData?.filter((r) => r.vehicle_id === vehicle.id && r.distance_since_last_refuel && r.liters) || []
           const avgConsumption =
             vehicleRecords.length > 0
-              ? vehicleRecords.reduce((sum, r) => sum + (r.liters / r.calculated_odometer_difference) * 100, 0) /
+              ? vehicleRecords.reduce((sum, r) => sum + (r.liters / r.distance_since_last_refuel) * 100, 0) /
                 vehicleRecords.length
               : 0
           return {
