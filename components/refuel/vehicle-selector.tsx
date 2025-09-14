@@ -33,6 +33,18 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
   const [vehicleStats, setVehicleStats] = useState<VehicleStats | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const formatVehicleNumber = (internalNumber: string) => {
+    // Check if the internal number is a single digit (1-9)
+    const match = internalNumber.match(/^(\d+)$/)
+    if (match) {
+      const num = Number.parseInt(match[1])
+      if (num >= 1 && num <= 9) {
+        return num.toString().padStart(2, "0")
+      }
+    }
+    return internalNumber
+  }
+
   useEffect(() => {
     fetchVehicles()
   }, [])
@@ -147,7 +159,7 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
             {vehicles.map((vehicle) => (
               <SelectItem key={vehicle.id} value={vehicle.id}>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{vehicle.internal_number}</span>
+                  <span className="font-medium">{formatVehicleNumber(vehicle.internal_number)}</span>
                   <span className="text-sm text-muted-foreground">{vehicle.license_plate}</span>
                 </div>
               </SelectItem>
