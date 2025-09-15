@@ -23,7 +23,7 @@ export default async function VehiclesPage() {
       department:departments(name),
       latest_refuel:refuel_records(odometer_reading, refuel_date)
     `)
-    .order("internal_number")
+    .order("vehicle_number")
 
   if (error) {
     console.error("Error fetching vehicles:", error)

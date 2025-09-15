@@ -11,13 +11,12 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MoreHorizontal, Search, Eye, Edit, Trash2, Filter, ChevronUp, ChevronDown } from "lucide-react"
 import Link from "next/link"
-import type { DriverWithRelations } from "@/types/relations"
 
 interface DriversTableProps {
-  drivers: DriverWithRelations[]
+  drivers: any[]
 }
 
-type SortField = "name" | "internal_number" | "license_number" | "license_expiry" | "department" | "status"
+type SortField = "full_name" | "code" | "license_number" | "license_expiry" | "department" | "status"
 type SortDirection = "asc" | "desc" | null
 
 export function DriversTable({ drivers }: DriversTableProps) {
@@ -71,27 +70,12 @@ export function DriversTable({ drivers }: DriversTableProps) {
     const filtered = drivers.filter((driver) => {
       const matchesSearch =
         !searchTerm.trim() ||
-        driver.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        driver.internal_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        driver.license_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        driver.department?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        driver.user?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        driver.user?.email?.toLowerCase()?.includes(searchTerm.toLowerCase())
+        driver.full_name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.code?.toLowerCase()?.includes(searchTerm.toLowerCase())
 
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && driver.is_active) ||
-        (statusFilter === "inactive" && !driver.is_active)
+      const matchesStatus = statusFilter === "all" || true // No status field in basic drivers table
 
-      const matchesDepartment = departmentFilter === "all" || driver.department?.id === departmentFilter
-
-      const matchesLicenseExpiry =
-        licenseExpiryFilter === "all" ||
-        (licenseExpiryFilter === "expiring" && isLicenseExpiringSoon(driver.license_expiry)) ||
-        (licenseExpiryFilter === "valid" && driver.license_expiry && !isLicenseExpiringSoon(driver.license_expiry)) ||
-        (licenseExpiryFilter === "missing" && !driver.license_expiry)
-
-      return matchesSearch && matchesStatus && matchesDepartment && matchesLicenseExpiry
+      return matchesSearch && matchesStatus
     })
 
     if (sortField && sortDirection) {
@@ -100,13 +84,13 @@ export function DriversTable({ drivers }: DriversTableProps) {
         let bValue: any
 
         switch (sortField) {
-          case "name":
-            aValue = a.name || ""
-            bValue = b.name || ""
+          case "full_name":
+            aValue = a.full_name || ""
+            bValue = b.full_name || ""
             break
-          case "internal_number":
-            aValue = a.internal_number || ""
-            bValue = b.internal_number || ""
+          case "code":
+            aValue = a.code || ""
+            bValue = b.code || ""
             break
           case "license_number":
             aValue = a.license_number || ""
@@ -122,7 +106,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
             break
           case "status":
             aValue = a.is_active ? "Ativo" : "Inativo"
-            bValue = b.is_active ? "Ativo" : "Inativo"
+            bValue = a.is_active ? "Ativo" : "Inativo"
             break
           default:
             return 0
@@ -168,8 +152,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
+                {/* Removed status options as there is no status field */}
               </SelectContent>
             </Select>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -207,13 +190,13 @@ export function DriversTable({ drivers }: DriversTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableHeader field="name">Nome</SortableHeader>
-                <SortableHeader field="internal_number">Nº Interno</SortableHeader>
-                <SortableHeader field="license_number">Nº Carta</SortableHeader>
-                <TableHead>Categorias</TableHead>
-                <SortableHeader field="license_expiry">Validade Carta</SortableHeader>
-                <SortableHeader field="department">Departamento</SortableHeader>
-                <SortableHeader field="status">Estado</SortableHeader>
+                <SortableHeader field="full_name">Nome</SortableHeader>
+                <SortableHeader field="code">Nº Interno</SortableHeader>
+                <TableCell>Nº Carta</TableCell>
+                <TableCell>Categorias</TableCell>
+                <TableCell>Validade Carta</TableCell>
+                <TableCell>Departamento</TableCell>
+                <TableCell>Estado</TableCell>
                 <TableHead className="w-[70px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -238,46 +221,17 @@ export function DriversTable({ drivers }: DriversTableProps) {
                   <TableRow key={driver.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{driver.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {driver.user?.email || "Sem utilizador associado"}
-                        </div>
+                        <div className="font-medium">{driver.full_name}</div>
+                        <div className="text-sm text-muted-foreground">Código: {driver.code || "N/A"}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono">{driver.internal_number}</TableCell>
-                    <TableCell className="font-mono">{driver.license_number || "—"}</TableCell>
+                    <TableCell className="font-mono">{driver.code}</TableCell>
+                    <TableCell className="font-mono">—</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell>—</TableCell>
                     <TableCell>
-                      {driver.license_categories && driver.license_categories.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {driver.license_categories.map((category) => (
-                            <Badge key={category} variant="secondary" className="text-xs">
-                              {category}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <span>—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {driver.license_expiry ? (
-                        <div className={isLicenseExpiringSoon(driver.license_expiry) ? "text-red-600" : ""}>
-                          {formatDate(driver.license_expiry)}
-                          {isLicenseExpiringSoon(driver.license_expiry) && (
-                            <Badge variant="destructive" className="ml-2 text-xs">
-                              Expira em breve
-                            </Badge>
-                          )}
-                        </div>
-                      ) : (
-                        <span>—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{driver.department?.name || "Sem departamento"}</TableCell>
-                    <TableCell>
-                      <Badge variant={driver.is_active ? "default" : "secondary"}>
-                        {driver.is_active ? "Ativo" : "Inativo"}
-                      </Badge>
+                      <Badge variant="default">Ativo</Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

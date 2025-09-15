@@ -98,15 +98,15 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
     const filtered = vehicles.filter((vehicle) => {
       const matchesSearch =
         searchTerm === "" ||
-        vehicle.internal_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         vehicle.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.internal_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         vehicle.license_plate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         `${vehicle.make} ${vehicle.model}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.department?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        vehicle.department_name?.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesStatus = statusFilter === "all" || vehicle.status === statusFilter
       const matchesFuel = fuelFilter === "all" || vehicle.fuel_type === fuelFilter
-      const matchesDepartment = departmentFilter === "all" || vehicle.department?.id === departmentFilter
+      const matchesDepartment = departmentFilter === "all" || vehicle.department_name === departmentFilter
 
       return matchesSearch && matchesStatus && matchesFuel && matchesDepartment
     })
@@ -134,12 +134,12 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
             bValue = b.age_years || 0
             break
           case "category":
-            aValue = a.category?.name || ""
-            bValue = b.category?.name || ""
+            aValue = a.category_name || ""
+            bValue = b.category_name || ""
             break
           case "department":
-            aValue = a.department?.name || ""
-            bValue = b.department?.name || ""
+            aValue = a.department_name || ""
+            bValue = b.department_name || ""
             break
           case "fuel_type":
             aValue = fuelTypeLabels[a.fuel_type] || ""
@@ -168,8 +168,8 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
 
   const uniqueDepartments = useMemo(() => {
     const departments = vehicles
-      .map((v) => v.department)
-      .filter((dept, index, self) => dept && self.findIndex((d) => d?.id === dept.id) === index)
+      .map((v) => ({ id: v.department_id, name: v.department_name }))
+      .filter((dept, index, self) => dept.name && self.findIndex((d) => d?.name === dept.name) === index)
     return departments
   }, [vehicles])
 
@@ -244,8 +244,8 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {uniqueDepartments.map((dept) => (
-                  <SelectItem key={dept!.id} value={dept!.id}>
-                    {dept!.name}
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -307,8 +307,8 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
                       </TableCell>
                       <TableCell>{regInfo.date}</TableCell>
                       <TableCell>{regInfo.age}</TableCell>
-                      <TableCell>{vehicle.category?.name || "N/A"}</TableCell>
-                      <TableCell>{vehicle.department?.name || "N/A"}</TableCell>
+                      <TableCell>{vehicle.category_name || "N/A"}</TableCell>
+                      <TableCell>{vehicle.department_name || "N/A"}</TableCell>
                       <TableCell>{fuelTypeLabels[vehicle.fuel_type]}</TableCell>
                       <TableCell>
                         <Badge className={statusColors[vehicle.status]}>{statusLabels[vehicle.status]}</Badge>
