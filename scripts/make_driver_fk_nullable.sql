@@ -11,10 +11,11 @@ INSERT INTO departments (name, description) VALUES
 ('Maintenance', 'Vehicle maintenance and repairs'),
 ('Administration', 'Administrative and support functions');
 
+-- Fixed user role enum values to match the valid UserRole type
 INSERT INTO users (email, name, role, is_active) VALUES 
 ('ana.cota@mobiazores.pt', 'Ana Cota', 'driver', true),
 ('joao.silva@mobiazores.pt', 'João Silva', 'driver', true),
-('maria.santos@mobiazores.pt', 'Maria Santos', 'manager', true);
+('maria.santos@mobiazores.pt', 'Maria Santos', 'fleet_manager', true);
 
 -- Update existing drivers to link them with users and departments
 UPDATE drivers 
