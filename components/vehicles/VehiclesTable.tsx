@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import type { VehicleWithRelations } from "@/types/database"
+import type { VehicleWithRelations } from "@/types/relations"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"

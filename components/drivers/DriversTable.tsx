@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { MoreHorizontal, Search, Eye, Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
-import type { DriverWithRelations } from "@/types"
+import type { DriverWithRelations } from "@/types/relations"
 
 interface DriversTableProps {
   drivers: DriverWithRelations[]

@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import type { DriverWithRelations } from "@/types/database"
+import type { DriverWithRelations } from "@/types/relations"
 
 interface DriverFormData {
   user_id: string
