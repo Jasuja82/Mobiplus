@@ -16,11 +16,9 @@ export default async function VehiclesPage() {
   }
 
   const { data: vehicles, error } = await supabase
-    .from("vehicles")
+    .from("vehicles_with_age")
     .select(`
       *,
-      category:vehicle_categories(name),
-      department:departments(name),
       latest_refuel:refuel_records(odometer_reading, refuel_date)
     `)
     .order("internal_number")
