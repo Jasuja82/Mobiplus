@@ -70,10 +70,10 @@ export function MaintenanceScheduleTable({ schedules }: MaintenanceScheduleTable
     return schedules.filter((schedule) => {
       const matchesSearch =
         searchTerm === "" ||
-        schedule.vehicle?.license_plate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        schedule.vehicle?.license_plate?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
         `${schedule.vehicle?.make} ${schedule.vehicle?.model}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        schedule.category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        schedule.description?.toLowerCase().includes(searchTerm.toLowerCase())
+        schedule.category?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        schedule.description?.toLowerCase()?.includes(searchTerm.toLowerCase())
 
       const matchesStatus = statusFilter === "all" || schedule.status === statusFilter
       const matchesPriority = priorityFilter === "all" || schedule.priority.toString() === priorityFilter
