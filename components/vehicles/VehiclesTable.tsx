@@ -34,6 +34,21 @@ const fuelTypeLabels = {
 }
 
 export function VehiclesTable({ vehicles }: VehiclesTableProps) {
+  const formatRegistrationInfo = (vehicle: VehicleWithRelations & { latest_odometer?: number }) => {
+    if (vehicle.registration_date) {
+      const regDate = new Date(vehicle.registration_date)
+      const age = vehicle.age_years
+      return {
+        date: regDate.toLocaleDateString("pt-PT"),
+        age: age ? `${age} anos` : "N/A",
+      }
+    }
+    return {
+      date: vehicle.year ? `${vehicle.year}` : "N/A",
+      age: "N/A",
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -46,7 +61,8 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
               <TableRow>
                 <TableHead>Nº Viatura / Matrícula</TableHead>
                 <TableHead>Marca/Modelo</TableHead>
-                <TableHead>Ano</TableHead>
+                <TableHead>Data de Matrícula</TableHead>
+                <TableHead>Idade</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Departamento</TableHead>
                 <TableHead>Combustível</TableHead>
@@ -58,7 +74,7 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
             <TableBody>
               {vehicles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     Nenhum veículo encontrado.
                     <Link href="/vehicles/new" className="text-primary hover:underline ml-1">
                       Adicione o primeiro veículo
@@ -66,48 +82,52 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                vehicles.map((vehicle) => (
-                  <TableRow key={vehicle.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-primary">
-                          {vehicle.vehicle_number || vehicle.internal_number || "N/A"}
-                        </span>
-                        <span className="text-sm text-muted-foreground">{vehicle.license_plate}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {vehicle.make} {vehicle.model}
-                    </TableCell>
-                    <TableCell>{vehicle.year}</TableCell>
-                    <TableCell>{vehicle.category?.name || "N/A"}</TableCell>
-                    <TableCell>{vehicle.department?.name || "N/A"}</TableCell>
-                    <TableCell>{fuelTypeLabels[vehicle.fuel_type]}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[vehicle.status]}>{statusLabels[vehicle.status]}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {(vehicle.latest_odometer || vehicle.current_mileage || 0).toLocaleString()} km
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link href={`/vehicles/${vehicle.id}`}>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
+                vehicles.map((vehicle) => {
+                  const regInfo = formatRegistrationInfo(vehicle)
+                  return (
+                    <TableRow key={vehicle.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-primary">
+                            {vehicle.vehicle_number || vehicle.internal_number || "N/A"}
+                          </span>
+                          <span className="text-sm text-muted-foreground">{vehicle.license_plate}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {vehicle.make} {vehicle.model}
+                      </TableCell>
+                      <TableCell>{regInfo.date}</TableCell>
+                      <TableCell>{regInfo.age}</TableCell>
+                      <TableCell>{vehicle.category?.name || "N/A"}</TableCell>
+                      <TableCell>{vehicle.department?.name || "N/A"}</TableCell>
+                      <TableCell>{fuelTypeLabels[vehicle.fuel_type]}</TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[vehicle.status]}>{statusLabels[vehicle.status]}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(vehicle.latest_odometer || vehicle.current_mileage || 0).toLocaleString()} km
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link href={`/vehicles/${vehicle.id}`}>
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link href={`/vehicles/${vehicle.id}/edit`}>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        </Link>
-                        <Link href={`/vehicles/${vehicle.id}/edit`}>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
               )}
             </TableBody>
           </Table>

@@ -1,5 +1,5 @@
 // Types with relations for complex queries
-import type { Vehicle } from "./entities/Vehicle"
+import type { Vehicle, VehicleWithAge } from "./entities/Vehicle"
 import type { VehicleCategory } from "./entities/VehicleCategory"
 import type { Department } from "./entities/Department"
 import type { RefuelRecord } from "./entities/RefuelRecord"
@@ -12,7 +12,7 @@ import type { FuelStation } from "./entities/FuelStation"
 import type { Location } from "./entities/Location"
 import type { MaintenanceIntervention } from "./entities/MaintenanceIntervention"
 
-export interface VehicleWithRelations extends Vehicle {
+export interface VehicleWithRelations extends VehicleWithAge {
   category?: VehicleCategory
   department?: Department
   home_location?: Location
