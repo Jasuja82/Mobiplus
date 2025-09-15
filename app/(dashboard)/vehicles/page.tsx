@@ -19,6 +19,8 @@ export default async function VehiclesPage() {
     .from("vehicles_with_age")
     .select(`
       *,
+      category:vehicle_categories(name),
+      department:departments(name),
       latest_refuel:refuel_records(odometer_reading, refuel_date)
     `)
     .order("internal_number")
@@ -26,6 +28,8 @@ export default async function VehiclesPage() {
   if (error) {
     console.error("Error fetching vehicles:", error)
   }
+
+  console.log("[v0] Sample vehicle data:", vehicles?.[0])
 
   const processedVehicles =
     vehicles?.map((vehicle) => {
