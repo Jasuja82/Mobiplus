@@ -12,13 +12,13 @@ import "./globals.css"
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-dm-sans",
   display: "swap",
 })
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-space-grotesk",
   display: "swap",
 })
 
