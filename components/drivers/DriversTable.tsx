@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -147,170 +147,173 @@ export function DriversTable({ drivers }: DriversTableProps) {
   console.log("[v0] Filtered drivers count:", filteredDrivers.length)
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Pesquisar condutores..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
+    <Card>
+      <CardHeader>
+        <CardTitle>Lista de Condutores</CardTitle>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar condutores..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2 items-center">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {uniqueDepartments.map((dept) => (
+                  <SelectItem key={dept!.id} value={dept!.id}>
+                    {dept!.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={licenseExpiryFilter} onValueChange={setLicenseExpiryFilter}>
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Carta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="valid">Válidas</SelectItem>
+                <SelectItem value="expiring">A expirar</SelectItem>
+                <SelectItem value="missing">Sem carta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="flex gap-2 items-center">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Estado" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="active">Ativo</SelectItem>
-              <SelectItem value="inactive">Inativo</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Departamento" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              {uniqueDepartments.map((dept) => (
-                <SelectItem key={dept!.id} value={dept!.id}>
-                  {dept!.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={licenseExpiryFilter} onValueChange={setLicenseExpiryFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Carta" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="valid">Válidas</SelectItem>
-              <SelectItem value="expiring">A expirar</SelectItem>
-              <SelectItem value="missing">Sem carta</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="text-sm text-muted-foreground">
+          Mostrando {filteredDrivers.length} de {drivers?.length || 0} condutores
         </div>
-      </div>
-
-      <div className="text-sm text-muted-foreground">
-        Mostrando {filteredDrivers.length} de {drivers?.length || 0} condutores
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortableHeader field="name">Nome</SortableHeader>
-              <SortableHeader field="internal_number">Nº Interno</SortableHeader>
-              <SortableHeader field="license_number">Nº Carta</SortableHeader>
-              <TableHead>Categorias</TableHead>
-              <SortableHeader field="license_expiry">Validade Carta</SortableHeader>
-              <SortableHeader field="department">Departamento</SortableHeader>
-              <SortableHeader field="status">Estado</SortableHeader>
-              <TableHead className="w-[70px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredDrivers.length === 0 ? (
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {drivers?.length === 0 ? (
-                    <>
-                      Nenhum condutor registado.{" "}
-                      <Link href="/drivers/new" className="text-primary hover:underline">
-                        Adicione o primeiro condutor
-                      </Link>
-                    </>
-                  ) : (
-                    "Nenhum condutor corresponde aos filtros aplicados."
-                  )}
-                </TableCell>
+                <SortableHeader field="name">Nome</SortableHeader>
+                <SortableHeader field="internal_number">Nº Interno</SortableHeader>
+                <SortableHeader field="license_number">Nº Carta</SortableHeader>
+                <TableHead>Categorias</TableHead>
+                <SortableHeader field="license_expiry">Validade Carta</SortableHeader>
+                <SortableHeader field="department">Departamento</SortableHeader>
+                <SortableHeader field="status">Estado</SortableHeader>
+                <TableHead className="w-[70px]"></TableHead>
               </TableRow>
-            ) : (
-              filteredDrivers.map((driver) => (
-                <TableRow key={driver.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{driver.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {driver.user?.email || "Sem utilizador associado"}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono">{driver.internal_number}</TableCell>
-                  <TableCell className="font-mono">{driver.license_number || "—"}</TableCell>
-                  <TableCell>
-                    {driver.license_categories && driver.license_categories.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {driver.license_categories.map((category) => (
-                          <Badge key={category} variant="secondary" className="text-xs">
-                            {category}
-                          </Badge>
-                        ))}
-                      </div>
+            </TableHeader>
+            <TableBody>
+              {filteredDrivers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    {drivers?.length === 0 ? (
+                      <>
+                        Nenhum condutor registado.{" "}
+                        <Link href="/drivers/new" className="text-primary hover:underline">
+                          Adicione o primeiro condutor
+                        </Link>
+                      </>
                     ) : (
-                      <span>—</span>
+                      "Nenhum condutor corresponde aos filtros aplicados."
                     )}
-                  </TableCell>
-                  <TableCell>
-                    {driver.license_expiry ? (
-                      <div className={isLicenseExpiringSoon(driver.license_expiry) ? "text-red-600" : ""}>
-                        {formatDate(driver.license_expiry)}
-                        {isLicenseExpiringSoon(driver.license_expiry) && (
-                          <Badge variant="destructive" className="ml-2 text-xs">
-                            Expira em breve
-                          </Badge>
-                        )}
-                      </div>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{driver.department?.name || "Sem departamento"}</TableCell>
-                  <TableCell>
-                    <Badge variant={driver.is_active ? "default" : "secondary"}>
-                      {driver.is_active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/drivers/${driver.id}`}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver detalhes
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/drivers/${driver.id}/edit`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+              ) : (
+                filteredDrivers.map((driver) => (
+                  <TableRow key={driver.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{driver.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {driver.user?.email || "Sem utilizador associado"}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono">{driver.internal_number}</TableCell>
+                    <TableCell className="font-mono">{driver.license_number || "—"}</TableCell>
+                    <TableCell>
+                      {driver.license_categories && driver.license_categories.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {driver.license_categories.map((category) => (
+                            <Badge key={category} variant="secondary" className="text-xs">
+                              {category}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {driver.license_expiry ? (
+                        <div className={isLicenseExpiringSoon(driver.license_expiry) ? "text-red-600" : ""}>
+                          {formatDate(driver.license_expiry)}
+                          {isLicenseExpiringSoon(driver.license_expiry) && (
+                            <Badge variant="destructive" className="ml-2 text-xs">
+                              Expira em breve
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{driver.department?.name || "Sem departamento"}</TableCell>
+                    <TableCell>
+                      <Badge variant={driver.is_active ? "default" : "secondary"}>
+                        {driver.is_active ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/drivers/${driver.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Ver detalhes
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/drivers/${driver.id}/edit`}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
