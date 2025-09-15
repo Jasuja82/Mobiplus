@@ -21,6 +21,8 @@ interface FormErrors {
 }
 
 export default function LoginPage() {
+  console.log("[v0] Login page component loaded")
+
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
