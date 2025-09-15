@@ -10,12 +10,24 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Shield, Database, UserPlus, Key, Activity, AlertTriangle, Play, Download, Upload } from "lucide-react"
+import {
+  Shield,
+  Database,
+  UserPlus,
+  Key,
+  Activity,
+  AlertTriangle,
+  Play,
+  Download,
+  Upload,
+  RefreshCw,
+} from "lucide-react"
 
 export function SuperuserPanel() {
   const [activeTab, setActiveTab] = useState("users")
   const [systemStats, setSystemStats] = useState<any>({})
   const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchSystemStats()
@@ -25,8 +37,11 @@ export function SuperuserPanel() {
   const fetchSystemStats = async () => {
     try {
       const response = await fetch("/api/admin/system-stats")
-      const data = await response.json()
-      setSystemStats(data)
+      if (response.ok) {
+        const data = await response.json()
+        setSystemStats(data)
+        console.log("[v0] System stats loaded:", data)
+      }
     } catch (error) {
       console.error("Error fetching system stats:", error)
     }
@@ -35,10 +50,15 @@ export function SuperuserPanel() {
   const fetchAuditLogs = async () => {
     try {
       const response = await fetch("/api/admin/audit-logs")
-      const data = await response.json()
-      setAuditLogs(data.logs || [])
+      if (response.ok) {
+        const data = await response.json()
+        setAuditLogs(data.logs || [])
+        console.log("[v0] Audit logs loaded:", data.logs?.length, "entries")
+      }
     } catch (error) {
       console.error("Error fetching audit logs:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -51,7 +71,7 @@ export function SuperuserPanel() {
               <Database className="h-4 w-4 text-blue-500" />
               <span className="text-sm font-medium">Database</span>
             </div>
-            <div className="text-2xl font-bold">{systemStats.dbSize || "0"} MB</div>
+            <div className="text-2xl font-bold">{systemStats.dbSize || "Loading..."}</div>
             <div className="text-xs text-muted-foreground">Storage used</div>
           </CardContent>
         </Card>
@@ -63,7 +83,7 @@ export function SuperuserPanel() {
               <span className="text-sm font-medium">Active Users</span>
             </div>
             <div className="text-2xl font-bold">{systemStats.activeUsers || "0"}</div>
-            <div className="text-xs text-muted-foreground">Last 24h</div>
+            <div className="text-xs text-muted-foreground">Currently active</div>
           </CardContent>
         </Card>
 
@@ -71,10 +91,10 @@ export function SuperuserPanel() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-medium">Alerts</span>
+              <span className="text-sm font-medium">Total Records</span>
             </div>
-            <div className="text-2xl font-bold">{systemStats.pendingAlerts || "0"}</div>
-            <div className="text-xs text-muted-foreground">Pending</div>
+            <div className="text-2xl font-bold">{systemStats.totalRefuelRecords || "0"}</div>
+            <div className="text-xs text-muted-foreground">Refuel records</div>
           </CardContent>
         </Card>
 
@@ -82,10 +102,10 @@ export function SuperuserPanel() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-red-500" />
-              <span className="text-sm font-medium">Security</span>
+              <span className="text-sm font-medium">Vehicles</span>
             </div>
-            <div className="text-2xl font-bold">{systemStats.failedLogins || "0"}</div>
-            <div className="text-xs text-muted-foreground">Failed logins</div>
+            <div className="text-2xl font-bold">{systemStats.totalVehicles || "0"}</div>
+            <div className="text-xs text-muted-foreground">In fleet</div>
           </CardContent>
         </Card>
       </div>
@@ -221,6 +241,9 @@ export function SuperuserPanel() {
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
             System Audit Logs
+            <Button variant="ghost" size="sm" onClick={fetchAuditLogs} disabled={loading}>
+              <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -265,22 +288,34 @@ export function SuperuserPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {auditLogs.slice(0, 10).map((log, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="text-sm">{log.timestamp || "2024-01-15 10:30:00"}</TableCell>
-                    <TableCell>{log.user_email || "admin@example.com"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{log.action || "CREATE"}</Badge>
-                    </TableCell>
-                    <TableCell>{log.resource || "Vehicle"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{log.ip_address || "192.168.1.100"}</TableCell>
-                    <TableCell>
-                      <Badge variant={log.status === "success" ? "default" : "destructive"}>
-                        {log.status || "success"}
-                      </Badge>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">
+                      Loading audit logs...
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : auditLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">
+                      No audit logs found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  auditLogs.slice(0, 10).map((log, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="text-sm">{new Date(log.timestamp).toLocaleString()}</TableCell>
+                      <TableCell>{log.user_email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{log.action}</Badge>
+                      </TableCell>
+                      <TableCell>{log.resource}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{log.ip_address}</TableCell>
+                      <TableCell>
+                        <Badge variant={log.status === "success" ? "default" : "destructive"}>{log.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
