@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import type { VehicleWithRelations } from "@/types/database"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -34,20 +35,29 @@ const fuelTypeLabels = {
 }
 
 export function VehiclesTable({ vehicles }: VehiclesTableProps) {
-  const formatRegistrationInfo = (vehicle: VehicleWithRelations & { latest_odometer?: number }) => {
-    if (vehicle.registration_date) {
-      const regDate = new Date(vehicle.registration_date)
-      const age = vehicle.age_years
+  const formatRegistrationInfo = useMemo(() => {
+    return (vehicle: VehicleWithRelations & { latest_odometer?: number }) => {
+      if (vehicle.registration_date) {
+        try {
+          const regDate = new Date(vehicle.registration_date)
+          const age = vehicle.age_years
+          return {
+            date: regDate.toLocaleDateString("pt-PT"),
+            age: age ? `${age} anos` : "N/A",
+          }
+        } catch {
+          return {
+            date: vehicle.year ? `${vehicle.year}` : "N/A",
+            age: "N/A",
+          }
+        }
+      }
       return {
-        date: regDate.toLocaleDateString("pt-PT"),
-        age: age ? `${age} anos` : "N/A",
+        date: vehicle.year ? `${vehicle.year}` : "N/A",
+        age: "N/A",
       }
     }
-    return {
-      date: vehicle.year ? `${vehicle.year}` : "N/A",
-      age: "N/A",
-    }
-  }
+  }, [])
 
   return (
     <Card>
@@ -75,8 +85,8 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
               {vehicles.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                    Nenhum veículo encontrado.
-                    <Link href="/vehicles/new" className="text-primary hover:underline ml-1">
+                    Nenhum veículo encontrado.{" "}
+                    <Link href="/vehicles/new" className="text-primary hover:underline">
                       Adicione o primeiro veículo
                     </Link>
                   </TableCell>

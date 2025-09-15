@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { RefuelRecord } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -62,33 +62,46 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const filteredRecords = refuelRecords.filter(
-    (record) =>
-      record.vehicle?.license_plate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.vehicle?.make?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.vehicle?.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.fuel_station?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.fuel_station?.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.receipt_number?.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredRecords = useMemo(() => {
+    if (!searchTerm.trim()) return refuelRecords
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-PT", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    })
-  }
+    const searchLower = searchTerm.toLowerCase()
+    return refuelRecords.filter(
+      (record) =>
+        record.vehicle?.license_plate?.toLowerCase().includes(searchLower) ||
+        record.vehicle?.make?.toLowerCase().includes(searchLower) ||
+        record.vehicle?.model?.toLowerCase().includes(searchLower) ||
+        record.driver?.name?.toLowerCase().includes(searchLower) ||
+        record.fuel_station?.name?.toLowerCase().includes(searchLower) ||
+        record.fuel_station?.brand?.toLowerCase().includes(searchLower) ||
+        record.receipt_number?.toLowerCase().includes(searchLower),
+    )
+  }, [refuelRecords, searchTerm])
 
-  const formatVehicleNumber = (vehicleNumber?: string) => {
-    if (!vehicleNumber) return ""
-    const num = Number.parseInt(vehicleNumber)
-    if (num >= 1 && num <= 9) {
-      return `0${num}`
+  const formatDate = useMemo(() => {
+    return (dateString: string) => {
+      try {
+        return new Date(dateString).toLocaleDateString("pt-PT", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      } catch {
+        return "Data inválida"
+      }
     }
-    return vehicleNumber
-  }
+  }, [])
+
+  const formatVehicleNumber = useMemo(() => {
+    return (vehicleNumber?: string) => {
+      if (!vehicleNumber) return ""
+      const num = Number.parseInt(vehicleNumber)
+      if (num >= 1 && num <= 9) {
+        return `0${num}`
+      }
+      return vehicleNumber
+    }
+  }, [])
 
   const handleDelete = async () => {
     if (!deletingRecord) return
@@ -167,9 +180,12 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? "Nenhum registo encontrado para a pesquisa." : "Nenhum abastecimento encontrado."}
                       {!searchTerm && (
-                        <Link href="/refuel/new" className="text-primary hover:underline ml-1">
-                          Registar o primeiro abastecimento
-                        </Link>
+                        <>
+                          {" "}
+                          <Link href="/refuel/new" className="text-primary hover:underline">
+                            Registar o primeiro abastecimento
+                          </Link>
+                        </>
                       )}
                     </TableCell>
                   </TableRow>

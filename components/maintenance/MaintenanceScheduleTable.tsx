@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import type { MaintenanceSchedule } from "@/types/database"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -57,17 +58,29 @@ const priorityLabels = {
 }
 
 export function MaintenanceScheduleTable({ schedules }: MaintenanceScheduleTableProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-PT", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    })
-  }
+  const formatDate = useMemo(() => {
+    return (dateString: string) => {
+      try {
+        return new Date(dateString).toLocaleDateString("pt-PT", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      } catch {
+        return "Data inválida"
+      }
+    }
+  }, [])
 
-  const isOverdue = (scheduledDate: string, status: string) => {
-    return status === "scheduled" && new Date(scheduledDate) < new Date()
-  }
+  const isOverdue = useMemo(() => {
+    return (scheduledDate: string, status: string) => {
+      try {
+        return status === "scheduled" && new Date(scheduledDate) < new Date()
+      } catch {
+        return false
+      }
+    }
+  }, [])
 
   return (
     <Card>
@@ -93,8 +106,8 @@ export function MaintenanceScheduleTable({ schedules }: MaintenanceScheduleTable
               {schedules.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Nenhuma manutenção agendada.
-                    <Link href="/maintenance/schedule" className="text-primary hover:underline ml-1">
+                    Nenhuma manutenção agendada.{" "}
+                    <Link href="/maintenance/schedule" className="text-primary hover:underline">
                       Agendar a primeira manutenção
                     </Link>
                   </TableCell>
