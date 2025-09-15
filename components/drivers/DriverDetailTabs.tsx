@@ -70,7 +70,7 @@ export function DriverDetailTabs({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Nome</label>
-                  <p className="font-medium">{driver.user?.name}</p>
+                  <p className="font-medium">{driver.user?.name || driver.name || "Não disponível"}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Estado</label>
@@ -85,7 +85,7 @@ export function DriverDetailTabs({
               <div className="grid grid-cols-1 gap-4">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{driver.user?.email}</span>
+                  <span>{driver.user?.email || "Email não disponível"}</span>
                 </div>
                 {driver.user?.phone && (
                   <div className="flex items-center gap-2">
@@ -95,8 +95,14 @@ export function DriverDetailTabs({
                 )}
                 <div className="flex items-center gap-2">
                   <Building className="h-4 w-4 text-muted-foreground" />
-                  <span>{driver.department?.name}</span>
+                  <span>{driver.department?.name || "Departamento não atribuído"}</span>
                 </div>
+                {driver.internal_number && (
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span>Nº Interno: {driver.internal_number}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -110,54 +116,62 @@ export function DriverDetailTabs({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Número da Carta</label>
-                <p className="font-mono font-medium">{driver.license_number}</p>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Categorias</label>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {driver.license_categories?.map((category) => (
-                    <Badge key={category} variant="secondary" className="text-xs">
-                      {category}
-                    </Badge>
-                  ))}
+              {driver.license_number && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Número da Carta</label>
+                  <p className="font-mono font-medium">{driver.license_number}</p>
                 </div>
-              </div>
+              )}
+
+              {driver.license_categories && driver.license_categories.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Categorias</label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {driver.license_categories.map((category) => (
+                      <Badge key={category} variant="secondary" className="text-xs">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Validade da Carta</label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className={isExpiringSoon(driver.license_expiry) ? "text-red-600 font-medium" : ""}>
-                      {formatDate(driver.license_expiry)}
-                    </span>
-                    {isExpiringSoon(driver.license_expiry) && (
-                      <Badge variant="destructive" className="text-xs">
-                        Expira em breve
-                      </Badge>
-                    )}
+                {driver.license_expiry && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Validade da Carta</label>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className={isExpiringSoon(driver.license_expiry) ? "text-red-600 font-medium" : ""}>
+                        {formatDate(driver.license_expiry)}
+                      </span>
+                      {isExpiringSoon(driver.license_expiry) && (
+                        <Badge variant="destructive" className="text-xs">
+                          Expira em breve
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Certificado Médico</label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span
-                      className={isExpiringSoon(driver.medical_certificate_expiry) ? "text-red-600 font-medium" : ""}
-                    >
-                      {formatDate(driver.medical_certificate_expiry)}
-                    </span>
-                    {isExpiringSoon(driver.medical_certificate_expiry) && (
-                      <Badge variant="destructive" className="text-xs">
-                        Expira em breve
-                      </Badge>
-                    )}
+                {driver.medical_certificate_expiry && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Certificado Médico</label>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span
+                        className={isExpiringSoon(driver.medical_certificate_expiry) ? "text-red-600 font-medium" : ""}
+                      >
+                        {formatDate(driver.medical_certificate_expiry)}
+                      </span>
+                      {isExpiringSoon(driver.medical_certificate_expiry) && (
+                        <Badge variant="destructive" className="text-xs">
+                          Expira em breve
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

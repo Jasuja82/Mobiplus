@@ -119,22 +119,31 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
           <div>
             <h1 className="text-2xl font-bold">Detalhes do condutor</h1>
             <div className="flex items-center gap-3 mt-2">
-              <span className="text-xl font-semibold">{driver.user?.name}</span>
+              <span className="text-xl font-semibold">{driver.user?.name || driver.name}</span>
               <Badge variant={driver.is_active ? "default" : "secondary"}>
                 {driver.is_active ? "Ativo" : "Inativo"}
               </Badge>
               {isLicenseExpiringSoon(driver.license_expiry) && (
                 <Badge variant="destructive">Carta expira em breve</Badge>
               )}
+              {driver.medical_certificate_expiry && isLicenseExpiringSoon(driver.medical_certificate_expiry) && (
+                <Badge variant="destructive">Certificado médico expira em breve</Badge>
+              )}
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-              <span>Carta: {driver.license_number}</span>
+              {driver.license_number && (
+                <>
+                  <span>Carta: {driver.license_number}</span>
+                  <span>•</span>
+                </>
+              )}
+              <span>Departamento: {driver.department?.name || "Não atribuído"}</span>
               <span>•</span>
-              <span>Departamento: {driver.department?.name}</span>
-              <span>•</span>
-              <span>Email: {driver.user?.email}</span>
+              <span>Email: {driver.user?.email || "Não disponível"}</span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">ID: {driver.id}</p>
+            {driver.internal_number && (
+              <p className="text-sm text-muted-foreground mt-1">Nº Interno: {driver.internal_number}</p>
+            )}
           </div>
         </div>
       </div>
