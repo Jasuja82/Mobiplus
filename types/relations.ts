@@ -7,10 +7,10 @@ import type { Driver } from "./entities/Driver"
 import type { User } from "./entities/User"
 import type { MaintenanceSchedule } from "./entities/MaintenanceSchedule"
 import type { MaintenanceCategory } from "./entities/MaintenanceCategory"
-import type { VehicleAssignment } from "./entities/VehicleAssignment"
-import type { FuelStation } from "./entities/FuelStation"
+// import type { VehicleAssignment } from "./entities/VehicleAssignment"
+// import type { FuelStation } from "./entities/FuelStation"
 import type { Location } from "./entities/Location"
-import type { MaintenanceIntervention } from "./entities/MaintenanceIntervention"
+// import type { MaintenanceIntervention } from "./entities/MaintenanceIntervention"
 
 export interface VehicleWithRelations extends VehicleWithAge {
   category?: VehicleCategory
@@ -34,19 +34,19 @@ export interface DriverWithRelations extends Driver {
   department?: Department
 }
 
-export interface VehicleAssignmentWithRelations extends VehicleAssignment {
-  vehicle?: Vehicle
-  driver?: DriverWithRelations
-  assigned_by_user?: User
-}
+// export interface VehicleAssignmentWithRelations extends VehicleAssignment {
+//   vehicle?: Vehicle
+//   driver?: DriverWithRelations
+//   assigned_by_user?: User
+// }
 
-export interface FuelStationWithRelations extends FuelStation {
-  location?: Location
-}
+// export interface FuelStationWithRelations extends FuelStation {
+//   location?: Location
+// }
 
-export interface MaintenanceInterventionWithRelations extends MaintenanceIntervention {
-  vehicle?: Vehicle
-  schedule?: MaintenanceSchedule
-  technician?: User
-  created_by_user?: User
-}
+// export interface MaintenanceInterventionWithRelations extends MaintenanceIntervention {
+//   vehicle?: Vehicle
+//   schedule?: MaintenanceSchedule
+//   technician?: User
+//   created_by_user?: User
+// }
