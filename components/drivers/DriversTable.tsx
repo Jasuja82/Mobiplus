@@ -71,12 +71,12 @@ export function DriversTable({ drivers }: DriversTableProps) {
     const filtered = drivers.filter((driver) => {
       const matchesSearch =
         !searchTerm.trim() ||
-        (driver.name && driver.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (driver.internal_number && driver.internal_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (driver.license_number && driver.license_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (driver.department?.name && driver.department.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (driver.user?.name && driver.user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (driver.user?.email && driver.user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        driver.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.internal_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.license_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.department?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.user?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.user?.email?.toLowerCase()?.includes(searchTerm.toLowerCase())
 
       const matchesStatus =
         statusFilter === "all" ||

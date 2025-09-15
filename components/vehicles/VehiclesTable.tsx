@@ -98,11 +98,11 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
     const filtered = vehicles.filter((vehicle) => {
       const matchesSearch =
         searchTerm === "" ||
-        (vehicle.internal_number && vehicle.internal_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (vehicle.vehicle_number && vehicle.vehicle_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (vehicle.license_plate && vehicle.license_plate.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        vehicle.internal_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        vehicle.vehicle_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        vehicle.license_plate?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
         `${vehicle.make} ${vehicle.model}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (vehicle.department?.name && vehicle.department.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        vehicle.department?.name?.toLowerCase()?.includes(searchTerm.toLowerCase())
 
       const matchesStatus = statusFilter === "all" || vehicle.status === statusFilter
       const matchesFuel = fuelFilter === "all" || vehicle.fuel_type === fuelFilter

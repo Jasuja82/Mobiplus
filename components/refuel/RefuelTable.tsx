@@ -68,13 +68,13 @@ export function RefuelTable({ refuelRecords, vehicles = [], drivers = [], onRefr
     const searchLower = searchTerm.toLowerCase()
     return refuelRecords.filter(
       (record) =>
-        (record.vehicle?.license_plate && record.vehicle.license_plate.toLowerCase().includes(searchLower)) ||
-        (record.vehicle?.make && record.vehicle.make.toLowerCase().includes(searchLower)) ||
-        (record.vehicle?.model && record.vehicle.model.toLowerCase().includes(searchLower)) ||
-        (record.driver?.name && record.driver.name.toLowerCase().includes(searchLower)) ||
-        (record.fuel_station?.name && record.fuel_station.name.toLowerCase().includes(searchLower)) ||
-        (record.fuel_station?.brand && record.fuel_station.brand.toLowerCase().includes(searchLower)) ||
-        (record.receipt_number && record.receipt_number.toLowerCase().includes(searchLower)),
+        record.vehicle?.license_plate?.toLowerCase()?.includes(searchLower) ||
+        record.vehicle?.make?.toLowerCase()?.includes(searchLower) ||
+        record.vehicle?.model?.toLowerCase()?.includes(searchLower) ||
+        record.driver?.name?.toLowerCase()?.includes(searchLower) ||
+        record.fuel_station?.name?.toLowerCase()?.includes(searchLower) ||
+        record.fuel_station?.brand?.toLowerCase()?.includes(searchLower) ||
+        record.receipt_number?.toLowerCase()?.includes(searchLower),
     )
   }, [refuelRecords, searchTerm])
 
