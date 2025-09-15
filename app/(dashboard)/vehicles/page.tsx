@@ -30,6 +30,17 @@ export default async function VehiclesPage() {
   }
 
   console.log("[v0] Sample vehicle data:", vehicles?.[0])
+  console.log(
+    "[v0] Vehicle make/model data:",
+    vehicles?.slice(0, 5).map((v) => ({
+      internal_number: v.internal_number,
+      vehicle_number: v.vehicle_number,
+      make: v.make,
+      model: v.model,
+      registration_date: v.registration_date,
+      age_years: v.age_years,
+    })),
+  )
 
   const processedVehicles =
     vehicles?.map((vehicle) => {
