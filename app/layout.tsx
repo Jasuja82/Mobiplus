@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { DM_Sans, Space_Grotesk } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
-import { MaterialThemeProvider } from "@/components/material/MaterialThemeProvider"
+import { BootstrapProvider } from "@/components/material/BootstrapProvider"
 import { Toaster } from "@/components/ui/toaster"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
@@ -40,10 +40,11 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
       </head>
       <body className={`font-sans ${dmSans.variable} ${spaceGrotesk.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <MaterialThemeProvider>
+          <BootstrapProvider>
             <AuthProvider>
               <SettingsProvider>
                 <SidebarProvider>
@@ -56,7 +57,7 @@ export default function RootLayout({
                 </SidebarProvider>
               </SettingsProvider>
             </AuthProvider>
-          </MaterialThemeProvider>
+          </BootstrapProvider>
           <Toaster />
         </ThemeProvider>
         <Analytics />
