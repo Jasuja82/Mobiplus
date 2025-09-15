@@ -19,7 +19,6 @@ interface User {
   role: string
   department: string
   is_active: boolean
-  last_login: string | null
   created_at: string
 }
 
@@ -55,7 +54,6 @@ export function UserManagement() {
           role,
           department,
           is_active,
-          last_login,
           created_at
         `)
         .order("created_at", { ascending: false })
@@ -165,7 +163,7 @@ export function UserManagement() {
                   <TableHead>Role</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last Login</TableHead>
+                  <TableHead>Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -184,7 +182,7 @@ export function UserManagement() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {user.last_login ? new Date(user.last_login).toLocaleDateString("pt-PT") : "Never"}
+                      {new Date(user.created_at).toLocaleDateString("pt-PT")}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
