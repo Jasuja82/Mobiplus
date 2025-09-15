@@ -7,13 +7,13 @@ INSERT INTO departments (name, description) VALUES
   ('Operações', 'Departamento de Operações')
 ON CONFLICT (name) DO NOTHING;
 
--- Create sample users for drivers
-INSERT INTO users (email, name, phone, role, is_active) VALUES
-  ('ana.cota@mobiazores.pt', 'Ana Cota', '+351 296 123 001', 'driver', true),
-  ('carlos.silva@mobiazores.pt', 'Carlos Silva', '+351 296 123 002', 'driver', true),
-  ('maria.santos@mobiazores.pt', 'Maria Santos', '+351 296 123 003', 'driver', true),
-  ('joao.pereira@mobiazores.pt', 'João Pereira', '+351 296 123 004', 'driver', true),
-  ('teresa.costa@mobiazores.pt', 'Teresa Costa', '+351 296 123 005', 'driver', true)
+-- Create sample users for drivers with explicit UUID generation
+INSERT INTO users (id, email, name, phone, role, is_active) VALUES
+  (gen_random_uuid(), 'ana.cota@mobiazores.pt', 'Ana Cota', '+351 296 123 001', 'driver', true),
+  (gen_random_uuid(), 'carlos.silva@mobiazores.pt', 'Carlos Silva', '+351 296 123 002', 'driver', true),
+  (gen_random_uuid(), 'maria.santos@mobiazores.pt', 'Maria Santos', '+351 296 123 003', 'driver', true),
+  (gen_random_uuid(), 'joao.pereira@mobiazores.pt', 'João Pereira', '+351 296 123 004', 'driver', true),
+  (gen_random_uuid(), 'teresa.costa@mobiazores.pt', 'Teresa Costa', '+351 296 123 005', 'driver', true)
 ON CONFLICT (email) DO NOTHING;
 
 -- Update drivers using proper UUID lookups from the created records
