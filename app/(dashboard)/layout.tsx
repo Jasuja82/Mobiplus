@@ -2,6 +2,8 @@ import type React from "react"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardHeader } from "@/components/layout/DashboardHeader"
+import { AppSidebar } from "@/components/app-sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 export default async function DashboardLayout({
   children,
@@ -21,9 +23,14 @@ export default async function DashboardLayout({
   const { data: profile } = await supabase.from("users").select("*").eq("id", user.id).single()
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader user={profile} />
-      <main className="p-6 bg-background">{children}</main>
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader user={profile} />
+          <main className="flex-1 p-6 bg-background">{children}</main>
+        </div>
+      </div>
+    </SidebarProvider>
   )
 }

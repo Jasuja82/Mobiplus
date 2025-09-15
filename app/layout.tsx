@@ -4,8 +4,6 @@ import { DM_Sans, Space_Grotesk } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { AuthProvider } from "@/hooks/use-auth"
 import { Suspense } from "react"
@@ -45,14 +43,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <SettingsProvider>
-              <SidebarProvider>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <div className="flex min-h-screen w-full">
-                    <AppSidebar />
-                    <main className="flex-1">{children}</main>
-                  </div>
-                </Suspense>
-              </SidebarProvider>
+              <Suspense fallback={<div>Loading...</div>}>
+                <main className="min-h-screen w-full">{children}</main>
+              </Suspense>
             </SettingsProvider>
           </AuthProvider>
           <Toaster />
