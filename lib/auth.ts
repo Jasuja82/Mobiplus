@@ -29,7 +29,14 @@ export interface SignupCredentials extends LoginCredentials {
 }
 
 class AuthService {
-  private supabase = createClient()
+  private static supabaseClient: ReturnType<typeof createClient> | null = null
+
+  private get supabase() {
+    if (!AuthService.supabaseClient) {
+      AuthService.supabaseClient = createClient()
+    }
+    return AuthService.supabaseClient
+  }
 
   async signIn(credentials: LoginCredentials): Promise<AuthResponse<{ user: AuthUser; session: Session }>> {
     try {

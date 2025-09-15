@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { AuthProvider } from "@/hooks/use-auth"
+import { SWRProvider } from "@/lib/swr-config"
 import { Suspense } from "react"
 import "./globals.css"
 
@@ -41,13 +42,15 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${dmSans.variable} ${spaceGrotesk.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <SettingsProvider>
-              <Suspense fallback={<div>Loading...</div>}>
-                <main className="min-h-screen w-full">{children}</main>
-              </Suspense>
-            </SettingsProvider>
-          </AuthProvider>
+          <SWRProvider>
+            <AuthProvider>
+              <SettingsProvider>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <main className="min-h-screen w-full">{children}</main>
+                </Suspense>
+              </SettingsProvider>
+            </AuthProvider>
+          </SWRProvider>
           <Toaster />
         </ThemeProvider>
         <Analytics />
