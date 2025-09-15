@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { authService, type LoginCredentials } from "@/lib/auth"
+import { createBrowserClient } from "@supabase/ssr"
 
 export default function LoginPage() {
   console.log("[v0] Login page component loaded")
@@ -20,6 +21,34 @@ export default function LoginPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        )
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          console.log("[v0] User already authenticated, redirecting to dashboard")
+          router.replace("/dashboard")
+          return
+        }
+      } catch (error) {
+        console.error("[v0] Auth check error:", error)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+
+    checkAuth()
+  }, [router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -43,8 +72,7 @@ export default function LoginPage() {
 
       if (result.success && result.data) {
         console.log("[v0] Login successful, redirecting to dashboard")
-        router.push("/dashboard")
-        router.refresh()
+        router.replace("/dashboard")
       } else {
         console.log("[v0] Login failed:", result.error?.message)
         setError(result.error?.message || "Erro no login")
@@ -55,6 +83,17 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">A verificar autenticação...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
