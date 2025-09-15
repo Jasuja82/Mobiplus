@@ -2,19 +2,24 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { authService, type LoginCredentials } from "@/lib/auth"
 
 export default function LoginPage() {
-  console.log("[v0] Login page component loaded - simplified version")
+  console.log("[v0] Login page component loaded")
 
-  const [formData, setFormData] = useState({
+  const router = useRouter()
+  const [formData, setFormData] = useState<LoginCredentials>({
     email: "",
     password: "",
   })
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -22,18 +27,34 @@ export default function LoginPage() {
       ...prev,
       [name]: value,
     }))
+    // Clear error when user starts typing
+    if (error) setError(null)
   }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     console.log("[v0] Login form submitted")
-    setLoading(true)
 
-    // Simulate login process
-    setTimeout(() => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const result = await authService.signIn(formData)
+
+      if (result.success && result.data) {
+        console.log("[v0] Login successful, redirecting to dashboard")
+        router.push("/dashboard")
+        router.refresh()
+      } else {
+        console.log("[v0] Login failed:", result.error?.message)
+        setError(result.error?.message || "Erro no login")
+      }
+    } catch (err) {
+      console.error("[v0] Login error:", err)
+      setError("Erro inesperado. Tente novamente.")
+    } finally {
       setLoading(false)
-      console.log("[v0] Login process completed")
-    }, 2000)
+    }
   }
 
   return (
@@ -49,6 +70,12 @@ export default function LoginPage() {
 
         <CardContent>
           <form className="space-y-4" onSubmit={handleLogin}>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-4">
               {/* Email */}
               <div className="grid gap-2">
@@ -64,6 +91,7 @@ export default function LoginPage() {
                   placeholder="seu.email@mobiazores.pt"
                   value={formData.email}
                   onChange={handleInputChange}
+                  disabled={loading}
                 />
               </div>
 
@@ -81,16 +109,24 @@ export default function LoginPage() {
                   placeholder="Introduza a sua palavra-passe"
                   value={formData.password}
                   onChange={handleInputChange}
+                  disabled={loading}
                 />
               </div>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full" loading={loading}>
+            <Button
+              type="submit"
+              disabled={loading || !formData.email || !formData.password}
+              className="w-full"
+              loading={loading}
+            >
               {loading ? "A fazer login..." : "Entrar"}
             </Button>
 
             <div className="text-center space-y-2">
-              <p className="text-sm text-primary hover:text-primary/80 transition-colors">Não tem conta? Registar-se</p>
+              <p className="text-sm text-primary hover:text-primary/80 transition-colors cursor-pointer">
+                Não tem conta? Registar-se
+              </p>
               <p className="text-xs text-muted-foreground">Sistema de Gestão de Frota MobiAzores</p>
             </div>
           </form>
