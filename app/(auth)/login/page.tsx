@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,78 +23,67 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [checkingAuth, setCheckingAuth] = useState(true)
 
-  const supabase = useMemo(
-    () => createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!),
-    [],
-  )
-
-  const checkAuth = useCallback(async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (user) {
-        console.log("[v0] User already authenticated, redirecting to dashboard")
-        router.replace("/dashboard")
-        return
-      }
-    } catch (error) {
-      console.error("[v0] Auth check error:", error)
-    } finally {
-      setCheckingAuth(false)
-    }
-  }, [supabase, router])
-
   useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }))
-      // Clear error when user starts typing
-      if (error) setError(null)
-    },
-    [error],
-  )
-
-  const handleLogin = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      console.log("[v0] Login form submitted")
-
-      setLoading(true)
-      setError(null)
-
+    const checkAuth = async () => {
       try {
-        const result = await authService.signIn(formData)
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        )
 
-        if (result.success && result.data) {
-          console.log("[v0] Login successful, redirecting to dashboard")
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          console.log("[v0] User already authenticated, redirecting to dashboard")
           router.replace("/dashboard")
-        } else {
-          console.log("[v0] Login failed:", result.error?.message)
-          setError(result.error?.message || "Erro no login")
+          return
         }
-      } catch (err) {
-        console.error("[v0] Login error:", err)
-        setError("Erro inesperado. Tente novamente.")
+      } catch (error) {
+        console.error("[v0] Auth check error:", error)
       } finally {
-        setLoading(false)
+        setCheckingAuth(false)
       }
-    },
-    [formData, router],
-  )
+    }
 
-  const isFormValid = useMemo(
-    () => formData.email.length > 0 && formData.password.length > 0,
-    [formData.email, formData.password],
-  )
+    checkAuth()
+  }, [router])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    // Clear error when user starts typing
+    if (error) setError(null)
+  }
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    console.log("[v0] Login form submitted")
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const result = await authService.signIn(formData)
+
+      if (result.success && result.data) {
+        console.log("[v0] Login successful, redirecting to dashboard")
+        router.replace("/dashboard")
+      } else {
+        console.log("[v0] Login failed:", result.error?.message)
+        setError(result.error?.message || "Erro no login")
+      }
+    } catch (err) {
+      console.error("[v0] Login error:", err)
+      setError("Erro inesperado. Tente novamente.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (checkingAuth) {
     return (
@@ -164,7 +153,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button type="submit" disabled={loading || !isFormValid} className="w-full" loading={loading}>
+            <Button
+              type="submit"
+              disabled={loading || !formData.email || !formData.password}
+              className="w-full"
+              loading={loading}
+            >
               {loading ? "A fazer login..." : "Entrar"}
             </Button>
 

@@ -36,10 +36,10 @@ export function LocationsTable({ locations }: LocationsTableProps) {
     return locations.filter((location) => {
       const matchesSearch =
         !searchTerm.trim() ||
-        location.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        location.address?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        location.city?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        location.region?.toLowerCase()?.includes(searchTerm.toLowerCase())
+        location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        location.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        location.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        location.region?.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesStatus =
         statusFilter === "all" ||

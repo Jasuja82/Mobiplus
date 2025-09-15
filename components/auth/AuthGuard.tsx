@@ -1,84 +1,71 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { authService, type AuthUser } from "@/lib/auth"
 
 interface AuthGuardProps {
   children: React.ReactNode
   requiredRole?: string
-  requiredRoles?: string[]
-  fallbackPath?: string
+  requiredRoles?: string[] // Added support for multiple roles
+  fallbackPath?: string // Added customizable fallback path
 }
 
 export default function AuthGuard({ children, requiredRole, requiredRoles, fallbackPath = "/login" }: AuthGuardProps) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null) // Added error state
   const router = useRouter()
 
-  const hasRequiredPermissions = useCallback(
-    (currentUser: AuthUser) => {
-      if (requiredRole && !authService.hasRole(currentUser, requiredRole)) {
-        return { hasPermission: false, error: `Acesso negado. É necessário o papel: ${requiredRole}` }
-      }
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await authService.getCurrentUser()
 
-      if (requiredRoles && !authService.hasAnyRole(currentUser, requiredRoles)) {
-        return { hasPermission: false, error: `Acesso negado. É necessário um dos papéis: ${requiredRoles.join(", ")}` }
-      }
+        if (!response.success || !response.data) {
+          console.log("No authenticated user, redirecting to login")
+          router.push(fallbackPath)
+          return
+        }
 
-      return { hasPermission: true, error: null }
-    },
-    [requiredRole, requiredRoles],
-  )
+        const currentUser = response.data
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const response = await authService.getCurrentUser()
+        if (requiredRole && !authService.hasRole(currentUser, requiredRole)) {
+          console.log(`User lacks required role: ${requiredRole}`)
+          setError(`Acesso negado. É necessário o papel: ${requiredRole}`)
+          router.push("/unauthorized")
+          return
+        }
 
-      if (!response.success || !response.data) {
-        console.log("No authenticated user, redirecting to login")
+        if (requiredRoles && !authService.hasAnyRole(currentUser, requiredRoles)) {
+          console.log(`User lacks any of required roles: ${requiredRoles.join(", ")}`)
+          setError(`Acesso negado. É necessário um dos papéis: ${requiredRoles.join(", ")}`)
+          router.push("/unauthorized")
+          return
+        }
+
+        setUser(currentUser)
+        setError(null)
+      } catch (error) {
+        console.error("Auth check failed:", error)
+        setError("Erro na verificação de autenticação")
         router.push(fallbackPath)
-        return
+      } finally {
+        setLoading(false)
       }
-
-      const currentUser = response.data
-      const { hasPermission, error: permissionError } = hasRequiredPermissions(currentUser)
-
-      if (!hasPermission) {
-        console.log(permissionError)
-        setError(permissionError)
-        router.push("/unauthorized")
-        return
-      }
-
-      setUser(currentUser)
-      setError(null)
-    } catch (error) {
-      console.error("Auth check failed:", error)
-      setError("Erro na verificação de autenticação")
-      router.push(fallbackPath)
-    } finally {
-      setLoading(false)
     }
-  }, [router, fallbackPath, hasRequiredPermissions])
 
-  const handleAuthStateChange = useCallback(
-    (event: string, session: any) => {
+    void checkAuth()
+
+    const {
+      data: { subscription },
+    } = authService.onAuthStateChange((event, session) => {
       console.log(`Auth state changed: ${event}`)
 
       if (event === "SIGNED_IN" && session?.user) {
-        const currentUser = session.user as AuthUser
-        const { hasPermission, error: permissionError } = hasRequiredPermissions(currentUser)
-
-        if (hasPermission) {
-          setUser(currentUser)
-          setError(null)
-        } else {
-          setError(permissionError)
-          router.push("/unauthorized")
-        }
+        setUser(session.user as AuthUser)
+        setError(null)
       } else if (event === "SIGNED_OUT") {
         setUser(null)
         setError(null)
@@ -88,24 +75,15 @@ export default function AuthGuard({ children, requiredRole, requiredRoles, fallb
       }
 
       setLoading(false)
-    },
-    [hasRequiredPermissions, router, fallbackPath],
-  )
-
-  useEffect(() => {
-    checkAuth()
-
-    const {
-      data: { subscription },
-    } = authService.onAuthStateChange(handleAuthStateChange)
+    })
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [checkAuth, handleAuthStateChange])
+  }, [router, requiredRole, requiredRoles, fallbackPath])
 
-  const LoadingComponent = useMemo(
-    () => (
+  if (loading) {
+    return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -115,12 +93,11 @@ export default function AuthGuard({ children, requiredRole, requiredRoles, fallb
           </div>
         </div>
       </div>
-    ),
-    [],
-  )
+    )
+  }
 
-  const ErrorComponent = useMemo(
-    () => (
+  if (error) {
+    return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center space-y-4 max-w-md">
           <div className="text-red-500 text-6xl">⚠️</div>
@@ -136,13 +113,12 @@ export default function AuthGuard({ children, requiredRole, requiredRoles, fallb
           </div>
         </div>
       </div>
-    ),
-    [error, router, fallbackPath],
-  )
+    )
+  }
 
-  if (loading) return LoadingComponent
-  if (error) return ErrorComponent
-  if (!user) return null
+  if (!user) {
+    return null // Will redirect to login
+  }
 
   return <>{children}</>
 }

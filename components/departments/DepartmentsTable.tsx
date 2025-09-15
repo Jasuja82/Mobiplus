@@ -28,9 +28,9 @@ export function DepartmentsTable({ departments }: DepartmentsTableProps) {
     return departments.filter((dept) => {
       const matchesSearch =
         !searchTerm.trim() ||
-        dept.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        dept.description?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        dept.manager?.name?.toLowerCase()?.includes(searchTerm.toLowerCase())
+        dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dept.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dept.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesManager =
         managerFilter === "all" ||

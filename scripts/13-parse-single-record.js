@@ -23,17 +23,12 @@ async function parseSingleRecord() {
     }
 
     // Parse header
-    const headers = lines[0]
-      .split(",")
-      .map((h) => (h ? h.trim().replace(/"/g, "") : ""))
-      .filter((h) => h.length > 0) // Remove empty headers
-
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""))
     console.log("[v0] Headers found:", headers)
     console.log("[v0] Number of columns:", headers.length)
 
     // Parse first data record
-    const firstRecord = lines[1].split(",").map((cell) => (cell ? cell.trim().replace(/"/g, "") : ""))
-
+    const firstRecord = lines[1].split(",").map((cell) => cell.trim().replace(/"/g, ""))
     console.log("[v0] First record values:", firstRecord)
     console.log("[v0] Number of values:", firstRecord.length)
 
@@ -51,21 +46,15 @@ async function parseSingleRecord() {
     // Identify potential driver fields
     console.log("\n[v0] POTENTIAL DRIVER FIELDS:")
     console.log("=============================")
-    const driverFields = headers.filter((h) => {
-      if (!h || typeof h !== "string" || h.trim() === "") {
-        console.log("[v0] Skipping invalid header in driver filter:", h)
-        return false
-      }
-      const lowerH = h.toLowerCase()
-      return (
-        lowerH.includes("driver") ||
-        lowerH.includes("condutor") ||
-        lowerH.includes("name") ||
-        lowerH.includes("nome") ||
-        lowerH.includes("employee") ||
-        lowerH.includes("funcionario")
-      )
-    })
+    const driverFields = headers.filter(
+      (h) =>
+        h.toLowerCase().includes("driver") ||
+        h.toLowerCase().includes("condutor") ||
+        h.toLowerCase().includes("name") ||
+        h.toLowerCase().includes("nome") ||
+        h.toLowerCase().includes("employee") ||
+        h.toLowerCase().includes("funcionario"),
+    )
 
     driverFields.forEach((field) => {
       console.log(`${field}: "${mapping[field]}"`)
@@ -74,21 +63,15 @@ async function parseSingleRecord() {
     // Identify potential vehicle fields
     console.log("\n[v0] POTENTIAL VEHICLE FIELDS:")
     console.log("==============================")
-    const vehicleFields = headers.filter((h) => {
-      if (!h || typeof h !== "string" || h.trim() === "") {
-        console.log("[v0] Skipping invalid header in vehicle filter:", h)
-        return false
-      }
-      const lowerH = h.toLowerCase()
-      return (
-        lowerH.includes("vehicle") ||
-        lowerH.includes("viatura") ||
-        lowerH.includes("plate") ||
-        lowerH.includes("matricula") ||
-        lowerH.includes("number") ||
-        lowerH.includes("numero")
-      )
-    })
+    const vehicleFields = headers.filter(
+      (h) =>
+        h.toLowerCase().includes("vehicle") ||
+        h.toLowerCase().includes("viatura") ||
+        h.toLowerCase().includes("plate") ||
+        h.toLowerCase().includes("matricula") ||
+        h.toLowerCase().includes("number") ||
+        h.toLowerCase().includes("numero"),
+    )
 
     vehicleFields.forEach((field) => {
       console.log(`${field}: "${mapping[field]}"`)
@@ -97,23 +80,17 @@ async function parseSingleRecord() {
     // Identify potential fuel fields
     console.log("\n[v0] POTENTIAL FUEL FIELDS:")
     console.log("===========================")
-    const fuelFields = headers.filter((h) => {
-      if (!h || typeof h !== "string" || h.trim() === "") {
-        console.log("[v0] Skipping invalid header in fuel filter:", h)
-        return false
-      }
-      const lowerH = h.toLowerCase()
-      return (
-        lowerH.includes("fuel") ||
-        lowerH.includes("combustivel") ||
-        lowerH.includes("liter") ||
-        lowerH.includes("litro") ||
-        lowerH.includes("cost") ||
-        lowerH.includes("custo") ||
-        lowerH.includes("price") ||
-        lowerH.includes("preco")
-      )
-    })
+    const fuelFields = headers.filter(
+      (h) =>
+        h.toLowerCase().includes("fuel") ||
+        h.toLowerCase().includes("combustivel") ||
+        h.toLowerCase().includes("liter") ||
+        h.toLowerCase().includes("litro") ||
+        h.toLowerCase().includes("cost") ||
+        h.toLowerCase().includes("custo") ||
+        h.toLowerCase().includes("price") ||
+        h.toLowerCase().includes("preco"),
+    )
 
     fuelFields.forEach((field) => {
       console.log(`${field}: "${mapping[field]}"`)

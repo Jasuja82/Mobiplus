@@ -19,8 +19,8 @@ export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
     return assignments.filter(
       (assignment) =>
         !searchTerm.trim() ||
-        assignment.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-        assignment.description?.toLowerCase()?.includes(searchTerm.toLowerCase()),
+        assignment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assignment.description?.toLowerCase().includes(searchTerm.toLowerCase()),
     )
   }, [assignments, searchTerm])
 

@@ -6,7 +6,7 @@ import { NotificationSettings } from "@/components/settings/notification-setting
 import { SuperuserPanel } from "@/components/settings/superuser-panel"
 import { UserManagement } from "@/components/settings/user-management"
 import { SystemSettings } from "@/components/settings/system-settings"
-import { useAuth } from "@/hooks/use-auth.tsx"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function SettingsContent() {
   const { user, isHydrated } = useAuth()
