@@ -68,6 +68,9 @@ importers:
       '@supabase/supabase-js':
         specifier: latest
         version: 2.57.4
+      '@tanstack/react-table':
+        specifier: ^8.20.5
+        version: 8.20.5(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
       '@vercel/analytics':
         specifier: latest
         version: 1.5.0(next@14.2.16(@babel/core@7.28.4)(react-dom@18.0.0(react@18.0.0))(react@18.0.0))(react@18.0.0)
@@ -1164,6 +1167,17 @@ packages:
 
   '@tailwindcss/postcss@4.1.9':
     resolution: {integrity: sha512-v3DKzHibZO8ioVDmuVHCW1PR0XSM7nS40EjZFJEA1xPuvTuQPaR5flE1LyikU3hu2u1KNWBtEaSe8qsQjX3tyg==}
+
+  '@tanstack/react-table@8.20.5':
+    resolution: {integrity: sha512-WEHopKw3znbUZ61s9i0+i9g8drmDo6asTWbrQh8Us63DAk/M0FkmIqERew6P71HI75ksZ2Pxyuf4vvKh9rAkiA==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/table-core@8.20.5':
+    resolution: {integrity: sha512-P9dF7XbibHph2PFRz8gfBKEXEY/HJPOhym8CHmjF8y3q5mWpKx9xtZapXQUWCgkqvsK0R46Azuz+VaxD4Xl+Tg==}
+    engines: {node: '>=12'}
 
   '@types/d3-array@3.2.2':
     resolution: {integrity: sha512-hOLWVbm7uRza0BYXpIIW5pxfrKe0W+D5lrFiAEYR+pb6w3N2SwSMaJbXdUfSEv+dT4MfHBLtn5js0LAWaO6otw==}
@@ -3176,6 +3190,14 @@ snapshots:
       '@tailwindcss/oxide': 4.1.9
       postcss: 8.5.0
       tailwindcss: 4.1.9
+
+  '@tanstack/react-table@8.20.5(react-dom@18.0.0(react@18.0.0))(react@18.0.0)':
+    dependencies:
+      '@tanstack/table-core': 8.20.5
+      react: 18.0.0
+      react-dom: 18.0.0(react@18.0.0)
+
+  '@tanstack/table-core@8.20.5': {}
 
   '@types/d3-array@3.2.2': {}
 

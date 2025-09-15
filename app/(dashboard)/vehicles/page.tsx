@@ -29,6 +29,18 @@ export default async function VehiclesPage() {
     console.error("Error fetching vehicles:", error)
   }
 
+  console.log(
+    "[v0] Vehicle make/model data:",
+    vehicles?.map((v) => ({
+      id: v.id,
+      internal_number: v.internal_number,
+      make: v.make,
+      model: v.model,
+      make_type: typeof v.make,
+      model_type: typeof v.model,
+    })),
+  )
+
   const processedVehicles =
     vehicles?.map((vehicle) => {
       // Get the latest refuel record's odometer reading
