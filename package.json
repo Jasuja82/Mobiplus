@@ -9,11 +9,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "@emotion/react": "latest",
-    "@emotion/styled": "latest",
     "@hookform/resolvers": "^3.10.0",
-    "@mui/material": "latest",
-    "@mui/material-pigment-css": "latest",
+    "@mui/material": "7.3.2",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-avatar": "latest",
     "@radix-ui/react-checkbox": "latest",
