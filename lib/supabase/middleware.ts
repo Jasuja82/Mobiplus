@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
+  console.log("[v0] updateSession called for:", request.nextUrl.pathname)
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -37,6 +39,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  console.log("[v0] User authenticated:", !!user, "Path:", request.nextUrl.pathname)
+
   if (
     request.nextUrl.pathname !== "/" &&
     !user &&
@@ -49,12 +53,14 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith("/maintenance") ||
       request.nextUrl.pathname.startsWith("/analytics"))
   ) {
+    console.log("[v0] Redirecting unauthenticated user to /login")
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 
+  console.log("[v0] Middleware completed successfully")
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   return supabaseResponse
 }
