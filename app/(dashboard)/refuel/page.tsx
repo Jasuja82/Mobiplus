@@ -29,12 +29,6 @@ export default async function RefuelPage() {
         vehicle_number,
         internal_number
       ),
-      driver:drivers(
-        id,
-        name,
-        internal_number,
-        license_number
-      ),
       fuel_station:fuel_stations(
         id,
         name,
@@ -51,14 +45,10 @@ export default async function RefuelPage() {
     .eq("status", "active")
     .order("vehicle_number")
 
-  const { data: drivers } = await supabase
-    .from("drivers")
-    .select("id, name, internal_number, license_number")
-    .eq("is_active", true)
-    .order("internal_number")
+  const { data: drivers } = await supabase.from("drivers").select("id, full_name, code").order("code")
 
   if (error) {
-    console.error("Error fetching refuel records:", error)
+    console.error("Error fetching refuel records:", error.message)
   }
 
   // Get statistics for current month
