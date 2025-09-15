@@ -23,9 +23,6 @@ importers:
       '@mui/material-pigment-css':
         specifier: latest
         version: 7.3.2(@emotion/react@11.14.0(@types/react@18.0.0)(react@18.0.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.0.0)(react@18.0.0))(@types/react@18.0.0)(react@18.0.0))(@pigment-css/react@0.0.30(@types/react@18.0.0)(react@18.0.0)(typescript@5.0.2))(@types/react@18.0.0)(react@18.0.0)
-      '@popperjs/core':
-        specifier: ^2.11.8
-        version: 2.11.8
       '@radix-ui/react-alert-dialog':
         specifier: latest
         version: 1.1.15(@types/react-dom@18.0.0)(@types/react@18.0.0)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
@@ -87,7 +84,7 @@ importers:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.5.0)
       bootstrap:
-        specifier: latest
+        specifier: 5.3.8
         version: 5.3.8(@popperjs/core@2.11.8)
       class-variance-authority:
         specifier: ^0.7.1

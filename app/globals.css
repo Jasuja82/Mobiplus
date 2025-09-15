@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "bootstrap/dist/css/bootstrap.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -127,6 +126,7 @@
   }
 }
 
+/* Enhanced Material Kit 3 inspired styling with better animations and shadows */
 .material-card {
   background: var(--card);
   color: var(--card-foreground);
