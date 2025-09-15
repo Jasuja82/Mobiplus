@@ -2,101 +2,38 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { authService, type LoginCredentials } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
-
-interface LoginFormData extends LoginCredentials {
-  // Can extend with additional fields if needed
-}
-
-interface FormErrors {
-  email?: string
-  password?: string
-  general?: string
-}
 
 export default function LoginPage() {
-  console.log("[v0] Login page component loaded")
+  console.log("[v0] Login page component loaded - simplified version")
 
-  const [formData, setFormData] = useState<LoginFormData>({
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
-  const [loading, setLoading] = useState<boolean>(false)
-  const [errors, setErrors] = useState<FormErrors>({})
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name as keyof FormErrors]
-        return newErrors
-      })
-    }
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }))
   }
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
-
-    if (!formData.email) {
-      newErrors.email = "Email é obrigatório"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email inválido"
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Palavra-passe é obrigatória"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Palavra-passe deve ter pelo menos 6 caracteres"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
-
+    console.log("[v0] Login form submitted")
     setLoading(true)
-    setErrors({})
 
-    try {
-      const response = await authService.signIn(formData)
-
-      if (!response.success) {
-        setErrors({
-          general: response.error?.message || "Erro desconhecido durante o login",
-        })
-        return
-      }
-
-      console.log("✅ User logged in successfully")
-      window.location.href = "/dashboard"
-    } catch (err) {
-      console.error("Login error:", err)
-      setErrors({
-        general: "Erro inesperado durante o login. Tente novamente.",
-      })
-    } finally {
+    // Simulate login process
+    setTimeout(() => {
       setLoading(false)
-    }
+      console.log("[v0] Login process completed")
+    }, 2000)
   }
 
   return (
@@ -127,9 +64,7 @@ export default function LoginPage() {
                   placeholder="seu.email@mobiazores.pt"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
-                {errors.email && <span className="text-sm text-destructive">{errors.email}</span>}
               </div>
 
               {/* Password */}
@@ -146,29 +81,16 @@ export default function LoginPage() {
                   placeholder="Introduza a sua palavra-passe"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
-                {errors.password && <span className="text-sm text-destructive">{errors.password}</span>}
               </div>
             </div>
-
-            {errors.general && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md">
-                <div className="flex">
-                  <span className="text-sm">❌ {errors.general}</span>
-                </div>
-              </div>
-            )}
 
             <Button type="submit" disabled={loading} className="w-full" loading={loading}>
               {loading ? "A fazer login..." : "Entrar"}
             </Button>
 
             <div className="text-center space-y-2">
-              <Link href="/signup" className="text-sm text-primary hover:text-primary/80 transition-colors">
-                Não tem conta? Registar-se
-              </Link>
-
+              <p className="text-sm text-primary hover:text-primary/80 transition-colors">Não tem conta? Registar-se</p>
               <p className="text-xs text-muted-foreground">Sistema de Gestão de Frota MobiAzores</p>
             </div>
           </form>
