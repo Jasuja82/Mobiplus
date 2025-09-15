@@ -11,11 +11,11 @@ INSERT INTO departments (name, description) VALUES
 ('Maintenance', 'Vehicle maintenance and repairs'),
 ('Administration', 'Administrative and support functions');
 
--- Fixed user role enum values to match the valid UserRole type
-INSERT INTO users (email, name, role, is_active) VALUES 
-('ana.cota@mobiazores.pt', 'Ana Cota', 'driver', true),
-('joao.silva@mobiazores.pt', 'João Silva', 'driver', true),
-('maria.santos@mobiazores.pt', 'Maria Santos', 'fleet_manager', true);
+-- Added explicit id column with gen_random_uuid() to fix null constraint violation
+INSERT INTO users (id, email, name, role, is_active) VALUES 
+(gen_random_uuid(), 'ana.cota@mobiazores.pt', 'Ana Cota', 'driver', true),
+(gen_random_uuid(), 'joao.silva@mobiazores.pt', 'João Silva', 'driver', true),
+(gen_random_uuid(), 'maria.santos@mobiazores.pt', 'Maria Santos', 'fleet_manager', true);
 
 -- Update existing drivers to link them with users and departments
 UPDATE drivers 
