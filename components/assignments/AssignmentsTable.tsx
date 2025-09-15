@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,11 +15,14 @@ interface AssignmentsTableProps {
 export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const filteredAssignments = assignments.filter(
-    (assignment) =>
-      assignment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.description?.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter(
+      (assignment) =>
+        !searchTerm.trim() ||
+        assignment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assignment.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+  }, [assignments, searchTerm])
 
   const handleDelete = async (assignmentId: string, assignmentName: string) => {
     if (!confirm(`Tem certeza que deseja eliminar a atribuição "${assignmentName}"?`)) return
@@ -45,14 +48,20 @@ export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Pesquisar atribuições..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Pesquisar atribuições..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Mostrando {filteredAssignments.length} de {assignments.length} atribuições
       </div>
 
       <div className="rounded-md border">
@@ -69,11 +78,15 @@ export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
             {filteredAssignments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? "Nenhuma atribuição encontrada" : "Nenhuma atribuição encontrada"}
-                  {!searchTerm && (
-                    <Link href="/assignments/new" className="text-primary hover:underline ml-1">
-                      Adicione a primeira atribuição
-                    </Link>
+                  {assignments.length === 0 ? (
+                    <>
+                      Nenhuma atribuição encontrada.{" "}
+                      <Link href="/assignments/new" className="text-primary hover:underline">
+                        Adicione a primeira atribuição
+                      </Link>
+                    </>
+                  ) : (
+                    "Nenhuma atribuição corresponde à pesquisa aplicada."
                   )}
                 </TableCell>
               </TableRow>

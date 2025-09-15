@@ -1,12 +1,14 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import type { MaintenanceSchedule } from "@/types/database"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Edit, Eye, Trash2, Play, CheckCircle } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Edit, Eye, Trash2, Play, CheckCircle, Search, Filter } from "lucide-react"
 import Link from "next/link"
 
 type MaintenanceScheduleWithRelations = MaintenanceSchedule & {
@@ -58,6 +60,42 @@ const priorityLabels = {
 }
 
 export function MaintenanceScheduleTable({ schedules }: MaintenanceScheduleTableProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [priorityFilter, setPriorityFilter] = useState<string>("all")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [overdueFilter, setOverdueFilter] = useState<string>("all")
+
+  const filteredSchedules = useMemo(() => {
+    return schedules.filter((schedule) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        schedule.vehicle?.license_plate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${schedule.vehicle?.make} ${schedule.vehicle?.model}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        schedule.category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        schedule.description?.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesStatus = statusFilter === "all" || schedule.status === statusFilter
+      const matchesPriority = priorityFilter === "all" || schedule.priority.toString() === priorityFilter
+      const matchesCategory = categoryFilter === "all" || schedule.category?.name === categoryFilter
+
+      const isScheduleOverdue = isOverdue(schedule.scheduled_date, schedule.status)
+      const matchesOverdue =
+        overdueFilter === "all" ||
+        (overdueFilter === "overdue" && isScheduleOverdue) ||
+        (overdueFilter === "not_overdue" && !isScheduleOverdue)
+
+      return matchesSearch && matchesStatus && matchesPriority && matchesCategory && matchesOverdue
+    })
+  }, [schedules, searchTerm, statusFilter, priorityFilter, categoryFilter, overdueFilter])
+
+  const uniqueCategories = useMemo(() => {
+    const categories = schedules
+      .map((s) => s.category?.name)
+      .filter((cat, index, self) => cat && self.indexOf(cat) === index)
+    return categories
+  }, [schedules])
+
   const formatDate = useMemo(() => {
     return (dateString: string) => {
       try {
@@ -86,6 +124,70 @@ export function MaintenanceScheduleTable({ schedules }: MaintenanceScheduleTable
     <Card>
       <CardHeader>
         <CardTitle>Manutenções Agendadas</CardTitle>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar por veículo, categoria..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="scheduled">Agendada</SelectItem>
+                <SelectItem value="in_progress">Em Progresso</SelectItem>
+                <SelectItem value="completed">Concluída</SelectItem>
+                <SelectItem value="cancelled">Cancelada</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="1">Baixa</SelectItem>
+                <SelectItem value="2">Média</SelectItem>
+                <SelectItem value="3">Alta</SelectItem>
+                <SelectItem value="4">Urgente</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {uniqueCategories.map((category) => (
+                  <SelectItem key={category} value={category!}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={overdueFilter} onValueChange={setOverdueFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Prazo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="overdue">Atrasadas</SelectItem>
+                <SelectItem value="not_overdue">No prazo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Mostrando {filteredSchedules.length} de {schedules.length} manutenções
+        </div>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -103,17 +205,23 @@ export function MaintenanceScheduleTable({ schedules }: MaintenanceScheduleTable
               </TableRow>
             </TableHeader>
             <TableBody>
-              {schedules.length === 0 ? (
+              {filteredSchedules.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Nenhuma manutenção agendada.{" "}
-                    <Link href="/maintenance/schedule" className="text-primary hover:underline">
-                      Agendar a primeira manutenção
-                    </Link>
+                    {schedules.length === 0 ? (
+                      <>
+                        Nenhuma manutenção agendada.{" "}
+                        <Link href="/maintenance/schedule" className="text-primary hover:underline">
+                          Agendar a primeira manutenção
+                        </Link>
+                      </>
+                    ) : (
+                      "Nenhuma manutenção corresponde aos filtros aplicados."
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
-                schedules.map((schedule) => (
+                filteredSchedules.map((schedule) => (
                   <TableRow
                     key={schedule.id}
                     className={isOverdue(schedule.scheduled_date, schedule.status) ? "bg-red-50" : ""}

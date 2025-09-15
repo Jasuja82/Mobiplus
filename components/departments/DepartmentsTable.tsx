@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { Department, User } from "@/types/database"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
-import { Search, Edit, Trash2, Eye, Building, Plus } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, Edit, Trash2, Eye, Building, Plus, Filter } from "lucide-react"
 import Link from "next/link"
 
 interface DepartmentWithManager extends Department {
@@ -20,13 +21,30 @@ interface DepartmentsTableProps {
 
 export function DepartmentsTable({ departments }: DepartmentsTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [managerFilter, setManagerFilter] = useState<string>("all")
+  const [budgetFilter, setBudgetFilter] = useState<string>("all")
 
-  const filteredDepartments = departments.filter(
-    (dept) =>
-      dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dept.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dept.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredDepartments = useMemo(() => {
+    return departments.filter((dept) => {
+      const matchesSearch =
+        !searchTerm.trim() ||
+        dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dept.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dept.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesManager =
+        managerFilter === "all" ||
+        (managerFilter === "with_manager" && dept.manager) ||
+        (managerFilter === "without_manager" && !dept.manager)
+
+      const matchesBudget =
+        budgetFilter === "all" ||
+        (budgetFilter === "with_budget" && dept.budget && dept.budget > 0) ||
+        (budgetFilter === "without_budget" && (!dept.budget || dept.budget <= 0))
+
+      return matchesSearch && matchesManager && matchesBudget
+    })
+  }, [departments, searchTerm, managerFilter, budgetFilter])
 
   const formatCurrency = (amount: number | null) => {
     if (!amount) return "N/A"
@@ -80,14 +98,43 @@ export function DepartmentsTable({ departments }: DepartmentsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Pesquisar departamentos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm border-border focus-visible:ring-ring"
-        />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Pesquisar departamentos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 border-border focus-visible:ring-ring"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={managerFilter} onValueChange={setManagerFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Gestor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="with_manager">Com gestor</SelectItem>
+              <SelectItem value="without_manager">Sem gestor</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={budgetFilter} onValueChange={setBudgetFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Orçamento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="with_budget">Com orçamento</SelectItem>
+              <SelectItem value="without_budget">Sem orçamento</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Mostrando {filteredDepartments.length} de {departments.length} departamentos
       </div>
 
       <Card className="border-border">
@@ -107,14 +154,15 @@ export function DepartmentsTable({ departments }: DepartmentsTableProps) {
               {filteredDepartments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    {searchTerm ? "Nenhum departamento encontrado para a pesquisa" : "Nenhum departamento encontrado"}
-                    {!searchTerm && (
-                      <Link
-                        href="/departments/new"
-                        className="text-primary hover:text-primary/80 ml-1 transition-colors"
-                      >
-                        Adicione o primeiro departamento
-                      </Link>
+                    {departments.length === 0 ? (
+                      <>
+                        Nenhum departamento encontrado.{" "}
+                        <Link href="/departments/new" className="text-primary hover:text-primary/80 transition-colors">
+                          Adicione o primeiro departamento
+                        </Link>
+                      </>
+                    ) : (
+                      "Nenhum departamento corresponde aos filtros aplicados."
                     )}
                   </TableCell>
                 </TableRow>

@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Search, Edit, Trash2, MapPin, Eye } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, Edit, Trash2, MapPin, Eye, Filter } from "lucide-react"
 import Link from "next/link"
 
 interface Location {
@@ -26,14 +27,38 @@ interface LocationsTableProps {
 
 export function LocationsTable({ locations }: LocationsTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [regionFilter, setRegionFilter] = useState<string>("all")
+  const [cityFilter, setCityFilter] = useState<string>("all")
 
-  const filteredLocations = locations.filter(
-    (location) =>
-      location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.region?.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredLocations = useMemo(() => {
+    return locations.filter((location) => {
+      const matchesSearch =
+        !searchTerm.trim() ||
+        location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        location.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        location.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        location.region?.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && location.is_active) ||
+        (statusFilter === "inactive" && !location.is_active)
+
+      const matchesRegion = regionFilter === "all" || location.region === regionFilter
+      const matchesCity = cityFilter === "all" || location.city === cityFilter
+
+      return matchesSearch && matchesStatus && matchesRegion && matchesCity
+    })
+  }, [locations, searchTerm, statusFilter, regionFilter, cityFilter])
+
+  const uniqueRegions = useMemo(() => {
+    return [...new Set(locations.map((l) => l.region).filter(Boolean))].sort()
+  }, [locations])
+
+  const uniqueCities = useMemo(() => {
+    return [...new Set(locations.map((l) => l.city).filter(Boolean))].sort()
+  }, [locations])
 
   const handleDelete = async (locationId: string, locationName: string) => {
     if (!confirm(`Tem certeza que deseja eliminar a localização "${locationName}"?`)) return
@@ -59,14 +84,59 @@ export function LocationsTable({ locations }: LocationsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Pesquisar localizações..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Pesquisar localizações..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex gap-2 items-center">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativo</SelectItem>
+              <SelectItem value="inactive">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={regionFilter} onValueChange={setRegionFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Região" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {uniqueRegions.map((region) => (
+                <SelectItem key={region} value={region}>
+                  {region}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={cityFilter} onValueChange={setCityFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Cidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              {uniqueCities.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Mostrando {filteredLocations.length} de {locations.length} localizações
       </div>
 
       <div className="rounded-md border">
@@ -86,11 +156,15 @@ export function LocationsTable({ locations }: LocationsTableProps) {
             {filteredLocations.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  {searchTerm ? "Nenhuma localização encontrada" : "Nenhuma localização encontrada"}
-                  {!searchTerm && (
-                    <Link href="/locations/new" className="text-primary hover:underline ml-1">
-                      Adicione a primeira localização
-                    </Link>
+                  {locations.length === 0 ? (
+                    <>
+                      Nenhuma localização encontrada.{" "}
+                      <Link href="/locations/new" className="text-primary hover:underline">
+                        Adicione a primeira localização
+                      </Link>
+                    </>
+                  ) : (
+                    "Nenhuma localização corresponde aos filtros aplicados."
                   )}
                 </TableCell>
               </TableRow>

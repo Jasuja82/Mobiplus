@@ -1,12 +1,14 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import type { VehicleWithRelations } from "@/types/relations"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Edit, Eye, Trash2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Edit, Eye, Trash2, Search, Filter } from "lucide-react"
 import Link from "next/link"
 
 interface VehiclesTableProps {
@@ -35,6 +37,36 @@ const fuelTypeLabels = {
 }
 
 export function VehiclesTable({ vehicles }: VehiclesTableProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [fuelFilter, setFuelFilter] = useState<string>("all")
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all")
+
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter((vehicle) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        vehicle.internal_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.vehicle_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.license_plate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${vehicle.make} ${vehicle.model}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.department?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesStatus = statusFilter === "all" || vehicle.status === statusFilter
+      const matchesFuel = fuelFilter === "all" || vehicle.fuel_type === fuelFilter
+      const matchesDepartment = departmentFilter === "all" || vehicle.department?.id === departmentFilter
+
+      return matchesSearch && matchesStatus && matchesFuel && matchesDepartment
+    })
+  }, [vehicles, searchTerm, statusFilter, fuelFilter, departmentFilter])
+
+  const uniqueDepartments = useMemo(() => {
+    const departments = vehicles
+      .map((v) => v.department)
+      .filter((dept, index, self) => dept && self.findIndex((d) => d?.id === dept.id) === index)
+    return departments
+  }, [vehicles])
+
   const formatRegistrationInfo = useMemo(() => {
     return (vehicle: VehicleWithRelations & { latest_odometer?: number }) => {
       if (vehicle.registration_date) {
@@ -63,6 +95,60 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
     <Card>
       <CardHeader>
         <CardTitle>Lista de Veículos</CardTitle>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar por nº, matrícula, marca/modelo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2 items-center">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="maintenance">Manutenção</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+                <SelectItem value="retired">Retirado</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={fuelFilter} onValueChange={setFuelFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Combustível" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="gasoline">Gasolina</SelectItem>
+                <SelectItem value="diesel">Diesel</SelectItem>
+                <SelectItem value="electric">Elétrico</SelectItem>
+                <SelectItem value="hybrid">Híbrido</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                {uniqueDepartments.map((dept) => (
+                  <SelectItem key={dept!.id} value={dept!.id}>
+                    {dept!.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Mostrando {filteredVehicles.length} de {vehicles.length} veículos
+        </div>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -82,17 +168,23 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vehicles.length === 0 ? (
+              {filteredVehicles.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                    Nenhum veículo encontrado.{" "}
-                    <Link href="/vehicles/new" className="text-primary hover:underline">
-                      Adicione o primeiro veículo
-                    </Link>
+                    {vehicles.length === 0 ? (
+                      <>
+                        Nenhum veículo encontrado.{" "}
+                        <Link href="/vehicles/new" className="text-primary hover:underline">
+                          Adicione o primeiro veículo
+                        </Link>
+                      </>
+                    ) : (
+                      "Nenhum veículo corresponde aos filtros aplicados."
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
-                vehicles.map((vehicle) => {
+                filteredVehicles.map((vehicle) => {
                   const regInfo = formatRegistrationInfo(vehicle)
                   return (
                     <TableRow key={vehicle.id}>

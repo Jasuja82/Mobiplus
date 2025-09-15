@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { MoreHorizontal, Search, Eye, Edit, Trash2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MoreHorizontal, Search, Eye, Edit, Trash2, Filter } from "lucide-react"
 import Link from "next/link"
 import type { DriverWithRelations } from "@/types/relations"
 
@@ -16,31 +17,53 @@ interface DriversTableProps {
 
 export function DriversTable({ drivers }: DriversTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all")
+  const [licenseExpiryFilter, setLicenseExpiryFilter] = useState<string>("all")
 
   console.log("[v0] DriversTable received drivers:", drivers)
   console.log("[v0] Drivers array length:", drivers?.length || 0)
 
-  const filteredDrivers = drivers.filter((driver) => {
-    if (!searchTerm.trim()) {
-      return true
-    }
+  const filteredDrivers = useMemo(() => {
+    return drivers.filter((driver) => {
+      const matchesSearch =
+        !searchTerm.trim() ||
+        driver.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.internal_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.license_number?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.department?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.user?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+        driver.user?.email?.toLowerCase()?.includes(searchTerm.toLowerCase())
 
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      driver.name?.toLowerCase()?.includes(searchLower) ||
-      driver.internal_number?.toLowerCase()?.includes(searchLower) ||
-      driver.license_number?.toLowerCase()?.includes(searchLower) ||
-      driver.department?.name?.toLowerCase()?.includes(searchLower) ||
-      driver.user?.name?.toLowerCase()?.includes(searchLower) ||
-      driver.user?.email?.toLowerCase()?.includes(searchLower)
-    )
-  })
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && driver.is_active) ||
+        (statusFilter === "inactive" && !driver.is_active)
+
+      const matchesDepartment = departmentFilter === "all" || driver.department?.id === departmentFilter
+
+      const matchesLicenseExpiry =
+        licenseExpiryFilter === "all" ||
+        (licenseExpiryFilter === "expiring" && isLicenseExpiringSoon(driver.license_expiry)) ||
+        (licenseExpiryFilter === "valid" && driver.license_expiry && !isLicenseExpiringSoon(driver.license_expiry)) ||
+        (licenseExpiryFilter === "missing" && !driver.license_expiry)
+
+      return matchesSearch && matchesStatus && matchesDepartment && matchesLicenseExpiry
+    })
+  }, [drivers, searchTerm, statusFilter, departmentFilter, licenseExpiryFilter])
+
+  const uniqueDepartments = useMemo(() => {
+    const departments = drivers
+      .map((d) => d.department)
+      .filter((dept, index, self) => dept && self.findIndex((d) => d?.id === dept.id) === index)
+    return departments
+  }, [drivers])
 
   console.log("[v0] Filtered drivers count:", filteredDrivers.length)
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -50,10 +73,47 @@ export function DriversTable({ drivers }: DriversTableProps) {
             className="pl-8"
           />
         </div>
+        <div className="flex gap-2 items-center">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativo</SelectItem>
+              <SelectItem value="inactive">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Departamento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {uniqueDepartments.map((dept) => (
+                <SelectItem key={dept!.id} value={dept!.id}>
+                  {dept!.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={licenseExpiryFilter} onValueChange={setLicenseExpiryFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Carta" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="valid">Válidas</SelectItem>
+              <SelectItem value="expiring">A expirar</SelectItem>
+              <SelectItem value="missing">Sem carta</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Total de condutores: {drivers?.length || 0} | Filtrados: {filteredDrivers.length}
+        Mostrando {filteredDrivers.length} de {drivers?.length || 0} condutores
       </div>
 
       <div className="rounded-md border">
@@ -74,7 +134,16 @@ export function DriversTable({ drivers }: DriversTableProps) {
             {filteredDrivers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {drivers?.length === 0 ? "Nenhum condutor registado" : "Nenhum condutor encontrado"}
+                  {drivers?.length === 0 ? (
+                    <>
+                      Nenhum condutor registado.{" "}
+                      <Link href="/drivers/new" className="text-primary hover:underline">
+                        Adicione o primeiro condutor
+                      </Link>
+                    </>
+                  ) : (
+                    "Nenhum condutor corresponde aos filtros aplicados."
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
