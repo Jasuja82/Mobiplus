@@ -15,15 +15,7 @@ export default async function DriversPage() {
     redirect("/login")
   }
 
-  // Get drivers with related data
-  const { data: drivers, error } = await supabase
-    .from("drivers")
-    .select(`
-      *,
-      user:users(name, email, phone),
-      department:departments(name)
-    `)
-    .order("created_at", { ascending: false })
+  const { data: drivers, error } = await supabase.from("drivers").select("*").order("created_at", { ascending: false })
 
   if (error) {
     console.error("Error fetching drivers:", error)
