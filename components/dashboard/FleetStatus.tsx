@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
 interface Vehicle {
   status: string
@@ -7,13 +6,6 @@ interface Vehicle {
 
 interface FleetStatusProps {
   vehicles: Vehicle[]
-}
-
-const statusColors = {
-  active: "bg-green-100 text-green-800",
-  maintenance: "bg-yellow-100 text-yellow-800",
-  inactive: "bg-red-100 text-red-800",
-  retired: "bg-gray-100 text-gray-800",
 }
 
 const statusLabels = {
@@ -42,9 +34,7 @@ export function FleetStatus({ vehicles }: FleetStatusProps) {
           {Object.entries(statusCounts).map(([status, count]) => (
             <div key={status} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Badge className={statusColors[status as keyof typeof statusColors]}>
-                  {statusLabels[status as keyof typeof statusLabels]}
-                </Badge>
+                <span className="text-sm font-medium">{statusLabels[status as keyof typeof statusLabels]}</span>
               </div>
               <span className="text-sm font-medium">{count} veículos</span>
             </div>

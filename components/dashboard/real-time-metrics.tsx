@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, TrendingDown, Car, Fuel, Wrench, Euro, Activity } from "lucide-react"
 import { createFleetSignals } from "@/lib/signals"
@@ -89,9 +88,7 @@ export function RealTimeMetrics() {
             </div>
           </div>
           {metrics.maintenanceVehicles > 0 && (
-            <Badge variant="secondary" className="mt-2">
-              {metrics.maintenanceVehicles} in maintenance
-            </Badge>
+            <p className="mt-2 text-sm text-muted-foreground">{metrics.maintenanceVehicles} in maintenance</p>
           )}
         </CardContent>
       </Card>
@@ -109,9 +106,9 @@ export function RealTimeMetrics() {
           </div>
           <p className="text-xs text-muted-foreground mt-1">Fleet average efficiency</p>
           {Math.abs(trends.fuelEfficiencyTrend) > 5 && (
-            <Badge variant={trends.fuelEfficiencyTrend > 0 ? "destructive" : "default"} className="mt-2">
+            <p className="mt-2 text-xs text-muted-foreground">
               {trends.fuelEfficiencyTrend > 0 ? "↑" : "↓"} {Math.abs(trends.fuelEfficiencyTrend).toFixed(1)}%
-            </Badge>
+            </p>
           )}
         </CardContent>
       </Card>
@@ -156,9 +153,9 @@ export function RealTimeMetrics() {
           </div>
           <p className="text-xs text-muted-foreground mt-1">Vehicles due for service</p>
           {metrics.pendingMaintenance > 0 && (
-            <Badge variant={metrics.pendingMaintenance > 5 ? "destructive" : "secondary"} className="mt-2">
-              {metrics.pendingMaintenance > 5 ? "High priority" : "Normal"}
-            </Badge>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {metrics.pendingMaintenance > 5 ? "High priority" : "Normal priority"}
+            </p>
           )}
         </CardContent>
       </Card>
