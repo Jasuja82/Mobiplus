@@ -14,12 +14,16 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-dm-sans",
   display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
 })
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-space-grotesk",
   display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
 })
 
 export const metadata: Metadata = {
@@ -36,8 +40,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
       </head>
       <body className={`font-sans ${dmSans.variable} ${spaceGrotesk.variable} antialiased`}>
