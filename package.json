@@ -34,7 +34,6 @@
     "@supabase/supabase-js": "latest",
     "@vercel/analytics": "latest",
     "autoprefixer": "^10.4.20",
-    "bootstrap": "5.3.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "latest",
