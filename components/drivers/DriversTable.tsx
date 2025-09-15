@@ -22,7 +22,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
 
   const filteredDrivers = drivers.filter((driver) => {
     if (!searchTerm.trim()) {
-      return true // Show all drivers when no search term
+      return true
     }
 
     const searchLower = searchTerm.toLowerCase()
@@ -31,8 +31,8 @@ export function DriversTable({ drivers }: DriversTableProps) {
       driver.internal_number?.toLowerCase()?.includes(searchLower) ||
       driver.license_number?.toLowerCase()?.includes(searchLower) ||
       driver.department?.name?.toLowerCase()?.includes(searchLower) ||
-      driver.user?.name?.toLowerCase()?.includes(searchLower) || // Added user name search
-      driver.user?.email?.toLowerCase()?.includes(searchLower) // Added user email search
+      driver.user?.name?.toLowerCase()?.includes(searchLower) ||
+      driver.user?.email?.toLowerCase()?.includes(searchLower)
     )
   })
 
@@ -84,20 +84,24 @@ export function DriversTable({ drivers }: DriversTableProps) {
                     <div>
                       <div className="font-medium">{driver.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {driver.user?.email || "Sem utilizador associado"} {/* Added fallback text */}
+                        {driver.user?.email || "Sem utilizador associado"}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="font-mono">{driver.internal_number}</TableCell>
                   <TableCell className="font-mono">{driver.license_number || "—"}</TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {driver.license_categories?.map((category) => (
-                        <Badge key={category} variant="secondary" className="text-xs">
-                          {category}
-                        </Badge>
-                      )) || "—"}
-                    </div>
+                    {driver.license_categories && driver.license_categories.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {driver.license_categories.map((category) => (
+                          <Badge key={category} variant="secondary" className="text-xs">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span>—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {driver.license_expiry ? (
@@ -110,10 +114,10 @@ export function DriversTable({ drivers }: DriversTableProps) {
                         )}
                       </div>
                     ) : (
-                      "—"
+                      <span>—</span>
                     )}
                   </TableCell>
-                  <TableCell>{driver.department?.name || "Sem departamento"}</TableCell> {/* Added fallback text */}
+                  <TableCell>{driver.department?.name || "Sem departamento"}</TableCell>
                   <TableCell>
                     <Badge variant={driver.is_active ? "default" : "secondary"}>
                       {driver.is_active ? "Ativo" : "Inativo"}
@@ -158,13 +162,21 @@ export function DriversTable({ drivers }: DriversTableProps) {
 
 function formatDate(dateString: string | null) {
   if (!dateString) return "—"
-  return new Date(dateString).toLocaleDateString("pt-PT")
+  try {
+    return new Date(dateString).toLocaleDateString("pt-PT")
+  } catch {
+    return "—"
+  }
 }
 
 function isLicenseExpiringSoon(expiryDate: string | null) {
   if (!expiryDate) return false
-  const expiry = new Date(expiryDate)
-  const today = new Date()
-  const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-  return daysUntilExpiry <= 30
+  try {
+    const expiry = new Date(expiryDate)
+    const today = new Date()
+    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return daysUntilExpiry <= 30
+  } catch {
+    return false
+  }
 }

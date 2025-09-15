@@ -1,5 +1,5 @@
-@import "tailwindcss";
-/* Removed tw-animate-css import that was causing CSS parsing errors with --tw-enter-translate-y */
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
