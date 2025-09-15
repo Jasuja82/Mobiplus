@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useMemo, useState } from "react"
 import type { VehicleWithRelations } from "@/types/relations"
 import { Badge } from "@/components/ui/badge"
@@ -8,12 +10,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Edit, Eye, Trash2, Search, Filter } from "lucide-react"
+import { Edit, Eye, Trash2, Search, Filter, ChevronUp, ChevronDown } from "lucide-react"
 import Link from "next/link"
 
 interface VehiclesTableProps {
   vehicles: (VehicleWithRelations & { latest_odometer?: number })[]
 }
+
+type SortField =
+  | "vehicle_number"
+  | "make_model"
+  | "registration_date"
+  | "age"
+  | "category"
+  | "department"
+  | "fuel_type"
+  | "status"
+  | "mileage"
+type SortDirection = "asc" | "desc" | null
 
 const statusColors = {
   active: "bg-green-100 text-green-800",
@@ -41,9 +55,47 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [fuelFilter, setFuelFilter] = useState<string>("all")
   const [departmentFilter, setDepartmentFilter] = useState<string>("all")
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDirection === "asc") {
+        setSortDirection("desc")
+      } else if (sortDirection === "desc") {
+        setSortField(null)
+        setSortDirection(null)
+      } else {
+        setSortDirection("asc")
+      }
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort(field)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <div className="flex flex-col">
+          <ChevronUp
+            className={`h-3 w-3 ${
+              sortField === field && sortDirection === "asc" ? "text-primary" : "text-muted-foreground/40"
+            }`}
+          />
+          <ChevronDown
+            className={`h-3 w-3 -mt-1 ${
+              sortField === field && sortDirection === "desc" ? "text-primary" : "text-muted-foreground/40"
+            }`}
+          />
+        </div>
+      </div>
+    </TableHead>
+  )
 
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter((vehicle) => {
+    const filtered = vehicles.filter((vehicle) => {
       const matchesSearch =
         searchTerm === "" ||
         vehicle.internal_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -58,7 +110,61 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
 
       return matchesSearch && matchesStatus && matchesFuel && matchesDepartment
     })
-  }, [vehicles, searchTerm, statusFilter, fuelFilter, departmentFilter])
+
+    if (sortField && sortDirection) {
+      filtered.sort((a, b) => {
+        let aValue: any
+        let bValue: any
+
+        switch (sortField) {
+          case "vehicle_number":
+            aValue = a.vehicle_number || a.internal_number || ""
+            bValue = b.vehicle_number || b.internal_number || ""
+            break
+          case "make_model":
+            aValue = `${a.make} ${a.model}`
+            bValue = `${b.make} ${b.model}`
+            break
+          case "registration_date":
+            aValue = a.registration_date ? new Date(a.registration_date) : new Date(0)
+            bValue = b.registration_date ? new Date(b.registration_date) : new Date(0)
+            break
+          case "age":
+            aValue = a.age_years || 0
+            bValue = b.age_years || 0
+            break
+          case "category":
+            aValue = a.category?.name || ""
+            bValue = b.category?.name || ""
+            break
+          case "department":
+            aValue = a.department?.name || ""
+            bValue = b.department?.name || ""
+            break
+          case "fuel_type":
+            aValue = fuelTypeLabels[a.fuel_type] || ""
+            bValue = fuelTypeLabels[b.fuel_type] || ""
+            break
+          case "status":
+            aValue = statusLabels[a.status] || ""
+            bValue = statusLabels[b.status] || ""
+            break
+          case "mileage":
+            aValue = a.latest_odometer || a.current_mileage || 0
+            bValue = b.latest_odometer || b.current_mileage || 0
+            break
+          default:
+            return 0
+        }
+
+        if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
+        if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return filtered
+  }, [vehicles, searchTerm, statusFilter, fuelFilter, departmentFilter, sortField, sortDirection])
 
   const uniqueDepartments = useMemo(() => {
     const departments = vehicles
@@ -155,15 +261,15 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nº Viatura / Matrícula</TableHead>
-                <TableHead>Marca/Modelo</TableHead>
-                <TableHead>Data de Matrícula</TableHead>
-                <TableHead>Idade</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Departamento</TableHead>
-                <TableHead>Combustível</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Quilometragem</TableHead>
+                <SortableHeader field="vehicle_number">Nº Viatura / Matrícula</SortableHeader>
+                <SortableHeader field="make_model">Marca/Modelo</SortableHeader>
+                <SortableHeader field="registration_date">Data de Matrícula</SortableHeader>
+                <SortableHeader field="age">Idade</SortableHeader>
+                <SortableHeader field="category">Categoria</SortableHeader>
+                <SortableHeader field="department">Departamento</SortableHeader>
+                <SortableHeader field="fuel_type">Combustível</SortableHeader>
+                <SortableHeader field="status">Estado</SortableHeader>
+                <SortableHeader field="mileage">Quilometragem</SortableHeader>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>

@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -7,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MoreHorizontal, Search, Eye, Edit, Trash2, Filter } from "lucide-react"
+import { MoreHorizontal, Search, Eye, Edit, Trash2, Filter, ChevronUp, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import type { DriverWithRelations } from "@/types/relations"
 
@@ -15,17 +17,58 @@ interface DriversTableProps {
   drivers: DriverWithRelations[]
 }
 
+type SortField = "name" | "internal_number" | "license_number" | "license_expiry" | "department" | "status"
+type SortDirection = "asc" | "desc" | null
+
 export function DriversTable({ drivers }: DriversTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [departmentFilter, setDepartmentFilter] = useState<string>("all")
   const [licenseExpiryFilter, setLicenseExpiryFilter] = useState<string>("all")
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
   console.log("[v0] DriversTable received drivers:", drivers)
   console.log("[v0] Drivers array length:", drivers?.length || 0)
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDirection === "asc") {
+        setSortDirection("desc")
+      } else if (sortDirection === "desc") {
+        setSortField(null)
+        setSortDirection(null)
+      } else {
+        setSortDirection("asc")
+      }
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead className="cursor-pointer hover:bg-muted/50 select-none" onClick={() => handleSort(field)}>
+      <div className="flex items-center gap-1">
+        {children}
+        <div className="flex flex-col">
+          <ChevronUp
+            className={`h-3 w-3 ${
+              sortField === field && sortDirection === "asc" ? "text-primary" : "text-muted-foreground/40"
+            }`}
+          />
+          <ChevronDown
+            className={`h-3 w-3 -mt-1 ${
+              sortField === field && sortDirection === "desc" ? "text-primary" : "text-muted-foreground/40"
+            }`}
+          />
+        </div>
+      </div>
+    </TableHead>
+  )
+
   const filteredDrivers = useMemo(() => {
-    return drivers.filter((driver) => {
+    const filtered = drivers.filter((driver) => {
       const matchesSearch =
         !searchTerm.trim() ||
         driver.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
@@ -50,7 +93,49 @@ export function DriversTable({ drivers }: DriversTableProps) {
 
       return matchesSearch && matchesStatus && matchesDepartment && matchesLicenseExpiry
     })
-  }, [drivers, searchTerm, statusFilter, departmentFilter, licenseExpiryFilter])
+
+    if (sortField && sortDirection) {
+      filtered.sort((a, b) => {
+        let aValue: any
+        let bValue: any
+
+        switch (sortField) {
+          case "name":
+            aValue = a.name || ""
+            bValue = b.name || ""
+            break
+          case "internal_number":
+            aValue = a.internal_number || ""
+            bValue = b.internal_number || ""
+            break
+          case "license_number":
+            aValue = a.license_number || ""
+            bValue = b.license_number || ""
+            break
+          case "license_expiry":
+            aValue = a.license_expiry ? new Date(a.license_expiry) : new Date(0)
+            bValue = b.license_expiry ? new Date(b.license_expiry) : new Date(0)
+            break
+          case "department":
+            aValue = a.department?.name || ""
+            bValue = b.department?.name || ""
+            break
+          case "status":
+            aValue = a.is_active ? "Ativo" : "Inativo"
+            bValue = b.is_active ? "Ativo" : "Inativo"
+            break
+          default:
+            return 0
+        }
+
+        if (aValue < bValue) return sortDirection === "asc" ? -1 : 1
+        if (aValue > bValue) return sortDirection === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return filtered
+  }, [drivers, searchTerm, statusFilter, departmentFilter, licenseExpiryFilter, sortField, sortDirection])
 
   const uniqueDepartments = useMemo(() => {
     const departments = drivers
@@ -120,13 +205,13 @@ export function DriversTable({ drivers }: DriversTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Nº Interno</TableHead>
-              <TableHead>Nº Carta</TableHead>
+              <SortableHeader field="name">Nome</SortableHeader>
+              <SortableHeader field="internal_number">Nº Interno</SortableHeader>
+              <SortableHeader field="license_number">Nº Carta</SortableHeader>
               <TableHead>Categorias</TableHead>
-              <TableHead>Validade Carta</TableHead>
-              <TableHead>Departamento</TableHead>
-              <TableHead>Estado</TableHead>
+              <SortableHeader field="license_expiry">Validade Carta</SortableHeader>
+              <SortableHeader field="department">Departamento</SortableHeader>
+              <SortableHeader field="status">Estado</SortableHeader>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
           </TableHeader>
