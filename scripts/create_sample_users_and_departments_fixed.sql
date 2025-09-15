@@ -1,9 +1,9 @@
 -- Create sample departments
-INSERT INTO departments (id, name, description, is_active) VALUES
-  ('dept-001', 'Transportes', 'Departamento de Transportes Públicos', true),
-  ('dept-002', 'Manutenção', 'Departamento de Manutenção de Frota', true),
-  ('dept-003', 'Administração', 'Departamento Administrativo', true),
-  ('dept-004', 'Operações', 'Departamento de Operações', true)
+INSERT INTO departments (id, name, description) VALUES
+  ('dept-001', 'Transportes', 'Departamento de Transportes Públicos'),
+  ('dept-002', 'Manutenção', 'Departamento de Manutenção de Frota'),
+  ('dept-003', 'Administração', 'Departamento Administrativo'),
+  ('dept-004', 'Operações', 'Departamento de Operações')
 ON CONFLICT (id) DO NOTHING;
 
 -- Create sample users for drivers
