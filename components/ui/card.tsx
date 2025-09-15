@@ -3,7 +3,16 @@ import type * as React from "react"
 import { cn } from "@/lib/utils"
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card" className={cn("card-material flex flex-col gap-6 py-6", className)} {...props} />
+  return (
+    <div
+      data-slot="card"
+      className={cn(
+        "bg-card text-card-foreground border border-border rounded-xl shadow-[0px_2px_1px_-1px_rgba(0,0,0,0.2),0px_1px_1px_0px_rgba(0,0,0,0.14),0px_1px_3px_0px_rgba(0,0,0,0.12)] transition-shadow duration-300 hover:shadow-[0px_3px_3px_-2px_rgba(0,0,0,0.2),0px_3px_4px_0px_rgba(0,0,0,0.14),0px_1px_8px_0px_rgba(0,0,0,0.12)] flex flex-col gap-6 py-6",
+        className,
+      )}
+      {...props}
+    />
+  )
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
@@ -20,14 +29,14 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="card-title" className={cn("text-material-h6 leading-none", className)} {...props} />
+  return <div data-slot="card-title" className={cn("text-lg font-medium leading-none", className)} {...props} />
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-material-body2 text-muted-foreground", className)}
+      className={cn("text-sm font-normal text-muted-foreground", className)}
       {...props}
     />
   )
