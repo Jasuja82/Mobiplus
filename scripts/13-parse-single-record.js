@@ -52,17 +52,18 @@ async function parseSingleRecord() {
     console.log("\n[v0] POTENTIAL DRIVER FIELDS:")
     console.log("=============================")
     const driverFields = headers.filter((h) => {
-      if (!h || typeof h !== "string") {
+      if (!h || typeof h !== "string" || h.trim() === "") {
         console.log("[v0] Skipping invalid header in driver filter:", h)
         return false
       }
+      const lowerH = h.toLowerCase()
       return (
-        h.toLowerCase().includes("driver") ||
-        h.toLowerCase().includes("condutor") ||
-        h.toLowerCase().includes("name") ||
-        h.toLowerCase().includes("nome") ||
-        h.toLowerCase().includes("employee") ||
-        h.toLowerCase().includes("funcionario")
+        lowerH.includes("driver") ||
+        lowerH.includes("condutor") ||
+        lowerH.includes("name") ||
+        lowerH.includes("nome") ||
+        lowerH.includes("employee") ||
+        lowerH.includes("funcionario")
       )
     })
 
@@ -74,17 +75,18 @@ async function parseSingleRecord() {
     console.log("\n[v0] POTENTIAL VEHICLE FIELDS:")
     console.log("==============================")
     const vehicleFields = headers.filter((h) => {
-      if (!h || typeof h !== "string") {
+      if (!h || typeof h !== "string" || h.trim() === "") {
         console.log("[v0] Skipping invalid header in vehicle filter:", h)
         return false
       }
+      const lowerH = h.toLowerCase()
       return (
-        h.toLowerCase().includes("vehicle") ||
-        h.toLowerCase().includes("viatura") ||
-        h.toLowerCase().includes("plate") ||
-        h.toLowerCase().includes("matricula") ||
-        h.toLowerCase().includes("number") ||
-        h.toLowerCase().includes("numero")
+        lowerH.includes("vehicle") ||
+        lowerH.includes("viatura") ||
+        lowerH.includes("plate") ||
+        lowerH.includes("matricula") ||
+        lowerH.includes("number") ||
+        lowerH.includes("numero")
       )
     })
 
@@ -96,19 +98,20 @@ async function parseSingleRecord() {
     console.log("\n[v0] POTENTIAL FUEL FIELDS:")
     console.log("===========================")
     const fuelFields = headers.filter((h) => {
-      if (!h || typeof h !== "string") {
+      if (!h || typeof h !== "string" || h.trim() === "") {
         console.log("[v0] Skipping invalid header in fuel filter:", h)
         return false
       }
+      const lowerH = h.toLowerCase()
       return (
-        h.toLowerCase().includes("fuel") ||
-        h.toLowerCase().includes("combustivel") ||
-        h.toLowerCase().includes("liter") ||
-        h.toLowerCase().includes("litro") ||
-        h.toLowerCase().includes("cost") ||
-        h.toLowerCase().includes("custo") ||
-        h.toLowerCase().includes("price") ||
-        h.toLowerCase().includes("preco")
+        lowerH.includes("fuel") ||
+        lowerH.includes("combustivel") ||
+        lowerH.includes("liter") ||
+        lowerH.includes("litro") ||
+        lowerH.includes("cost") ||
+        lowerH.includes("custo") ||
+        lowerH.includes("price") ||
+        lowerH.includes("preco")
       )
     })
 
