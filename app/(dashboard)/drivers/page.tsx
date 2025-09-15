@@ -15,8 +15,6 @@ export default async function DriversPage() {
     redirect("/login")
   }
 
-  console.log("[v0] Fetching drivers for user:", user.id)
-
   // Get drivers with related data
   const { data: drivers, error } = await supabase
     .from("drivers")
@@ -27,11 +25,8 @@ export default async function DriversPage() {
     `)
     .order("created_at", { ascending: false })
 
-  console.log("[v0] Drivers query result:", { drivers, error })
-  console.log("[v0] Number of drivers found:", drivers?.length || 0)
-
   if (error) {
-    console.error("[v0] Error fetching drivers:", error)
+    console.error("Error fetching drivers:", error)
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">

@@ -30,7 +30,9 @@ export function DriversTable({ drivers }: DriversTableProps) {
       driver.name?.toLowerCase()?.includes(searchLower) ||
       driver.internal_number?.toLowerCase()?.includes(searchLower) ||
       driver.license_number?.toLowerCase()?.includes(searchLower) ||
-      driver.department?.name?.toLowerCase()?.includes(searchLower)
+      driver.department?.name?.toLowerCase()?.includes(searchLower) ||
+      driver.user?.name?.toLowerCase()?.includes(searchLower) || // Added user name search
+      driver.user?.email?.toLowerCase()?.includes(searchLower) // Added user email search
     )
   })
 
@@ -81,7 +83,9 @@ export function DriversTable({ drivers }: DriversTableProps) {
                   <TableCell>
                     <div>
                       <div className="font-medium">{driver.name}</div>
-                      <div className="text-sm text-muted-foreground">{driver.user?.email}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {driver.user?.email || "Sem utilizador associado"} {/* Added fallback text */}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="font-mono">{driver.internal_number}</TableCell>
@@ -109,7 +113,7 @@ export function DriversTable({ drivers }: DriversTableProps) {
                       "—"
                     )}
                   </TableCell>
-                  <TableCell>{driver.department?.name || "—"}</TableCell>
+                  <TableCell>{driver.department?.name || "Sem departamento"}</TableCell> {/* Added fallback text */}
                   <TableCell>
                     <Badge variant={driver.is_active ? "default" : "secondary"}>
                       {driver.is_active ? "Ativo" : "Inativo"}
