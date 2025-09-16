@@ -41,22 +41,9 @@ export async function updateSession(request: NextRequest) {
 
   console.log("[v0] User authenticated:", !!user, "Path:", request.nextUrl.pathname)
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/(auth)/login") &&
-    !request.nextUrl.pathname.startsWith("/signup") &&
-    !request.nextUrl.pathname.startsWith("/(auth)/signup") &&
-    !request.nextUrl.pathname.startsWith("/auth") &&
-    (request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/vehicles") ||
-      request.nextUrl.pathname.startsWith("/refuel") ||
-      request.nextUrl.pathname.startsWith("/maintenance") ||
-      request.nextUrl.pathname.startsWith("/analytics"))
-  ) {
+  // Only redirect dashboard routes when user is not authenticated
+  if (!user && request.nextUrl.pathname.startsWith("/dashboard") && !request.nextUrl.pathname.startsWith("/login")) {
     console.log("[v0] Redirecting unauthenticated user to /login")
-    // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)

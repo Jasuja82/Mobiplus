@@ -69,7 +69,7 @@ export default function LoginPage() {
 
       if (result.success && result.data) {
         console.log("[v0] Login successful, redirecting to dashboard")
-        router.replace("/dashboard")
+        window.location.href = "/dashboard"
       } else {
         console.log("[v0] Login failed:", result.error?.message)
         setError(result.error?.message || "Erro no login")
