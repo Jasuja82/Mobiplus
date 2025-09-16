@@ -90,7 +90,7 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
 
       const { data: refuelData, error } = await supabase
         .from("refuel_records")
-        .select("refuel_date, odometer_reading, liters, distance_since_last_refuel")
+        .select("refuel_date, odometer_reading, liters, odometer_difference")
         .eq("vehicle_id", vehicleId)
         .order("refuel_date", { ascending: false })
 
@@ -104,10 +104,10 @@ export function VehicleSelector({ selectedVehicle, onVehicleChange, onVehicleSta
         const totalRefuels = refuelData.length
 
         // Calculate average efficiency
-        const efficiencyRecords = refuelData.filter((r) => r.distance_since_last_refuel && r.liters)
+        const efficiencyRecords = refuelData.filter((r) => r.odometer_difference && r.liters)
         const avgEfficiency =
           efficiencyRecords.length > 0
-            ? efficiencyRecords.reduce((sum, r) => sum + (r.liters / r.distance_since_last_refuel!) * 100, 0) /
+            ? efficiencyRecords.reduce((sum, r) => sum + (r.liters / r.odometer_difference!) * 100, 0) /
               efficiencyRecords.length
             : 0
 

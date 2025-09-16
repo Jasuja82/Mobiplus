@@ -17,8 +17,8 @@ interface RefuelRecord {
   odometer_reading: number
   liters: number
   total_cost: number
+  odometer_difference: number | null
   fuel_stations: { name: string } | null
-  distance_since_last_refuel: number | null
 }
 
 export function RecentRefuels({ vehicleId }: RecentRefuelsProps) {
@@ -47,7 +47,7 @@ export function RecentRefuels({ vehicleId }: RecentRefuelsProps) {
           odometer_reading,
           liters,
           total_cost,
-          distance_since_last_refuel,
+          odometer_difference,
           fuel_stations(name)
         `)
         .eq("vehicle_id", vehicleId)
@@ -103,7 +103,7 @@ export function RecentRefuels({ vehicleId }: RecentRefuelsProps) {
               <div className="text-center text-muted-foreground py-4">No refuel records found for this vehicle</div>
             ) : (
               recentRefuels.map((refuel) => {
-                const efficiency = calculateEfficiency(refuel.liters, refuel.distance_since_last_refuel)
+                const efficiency = calculateEfficiency(refuel.liters, refuel.odometer_difference)
                 return (
                   <div key={refuel.id} className="p-3 border rounded-lg space-y-2">
                     <div className="flex items-center justify-between">

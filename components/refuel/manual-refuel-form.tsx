@@ -159,10 +159,8 @@ export function ManualRefuelForm({
           odometer_reading: Number.parseInt(formData.odometer),
           liters: Number.parseFloat(formData.liters),
           cost_per_liter: Number.parseFloat(formData.cost_per_liter),
-          total_cost: Number.parseFloat(totalCost),
           fuel_station_id: formData.fuel_station_id || null,
           driver_id: formData.driver_id || null,
-          distance_since_last_refuel: kmDriven > 0 ? kmDriven : null,
           notes: formData.notes || null,
         }),
       })
