@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
     // Fetch assignment types
     const { data: assignments } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
 
+    // Fetch assignment types (for filtering)
+    const { data: assignmentTypes } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
+
     // Fetch refuel data to calculate mileage metrics
     const { data: refuelData } = await supabase
       .from("refuel_records")
@@ -197,6 +200,7 @@ export async function GET(request: NextRequest) {
       departments: departments || [],
       vehicles: vehicles || [],
       assignments: assignments || [],
+      assignmentTypes: assignmentTypes || [],
       totalKilometers,
       averageDaily: Math.round(averageDaily),
       utilizationRate: Math.round(utilizationRate * 10) / 10,

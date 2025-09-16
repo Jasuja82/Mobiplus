@@ -14,6 +14,7 @@ import type {
   EngineType,
   VehicleDetails,
   LicenseType,
+  AssignmentType,
 } from "@/types/entities"
 
 export type {
@@ -31,6 +32,7 @@ export type {
   EngineType,
   VehicleDetails,
   LicenseType,
+  AssignmentType,
 }
 
 export class DatabaseService {
@@ -156,7 +158,7 @@ export class DatabaseService {
 
   // Vehicles
   async getVehicles(departmentId?: string) {
-    let query = this.supabase.from("vehicle_summary").select("*").neq("status", "retired")
+    let query = this.supabase.from("vehicles").select("*").neq("status", "retired")
 
     if (departmentId) {
       query = query.eq("department_id", departmentId)
@@ -298,7 +300,7 @@ export class DatabaseService {
     return data as FuelStation
   }
 
-  // Assignments
+  // Assignments (real assignments, not types)
   async getAssignments() {
     const { data, error } = await this.supabase.from("assignments").select("*").eq("status", "active").order("name")
 
@@ -311,6 +313,21 @@ export class DatabaseService {
 
     if (error) throw error
     return data as Assignment
+  }
+
+  // Assignment Types (reference data for types of assignments)
+  async getAssignmentTypes() {
+    const { data, error } = await this.supabase.from("assignment_types").select("*").eq("is_active", true).order("name")
+
+    if (error) throw error
+    return data
+  }
+
+  async createAssignmentType(assignmentType: { name: string; description?: string; color?: string }) {
+    const { data, error } = await this.supabase.from("assignment_types").insert(assignmentType).select().single()
+
+    if (error) throw error
+    return data
   }
 
   // Reference data
