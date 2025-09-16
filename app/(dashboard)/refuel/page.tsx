@@ -17,7 +17,7 @@ export default async function RefuelPage() {
   }
 
   const { data: refuelRecords, error } = await supabase
-    .from("refuel_summary")
+    .from("refuel_analytics")
     .select("*")
     .order("refuel_date", { ascending: false })
     .limit(50)

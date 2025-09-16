@@ -204,7 +204,7 @@ export class DatabaseService {
     dateTo?: string
     limit?: number
   }) {
-    let query = this.supabase.from("refuel_summary").select("*")
+    let query = this.supabase.from("refuel_analytics").select("*")
 
     if (filters?.vehicleId) {
       query = query.eq("vehicle_id", filters.vehicleId)

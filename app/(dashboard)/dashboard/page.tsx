@@ -21,7 +21,7 @@ export default async function DashboardPage() {
 
   const [vehiclesResult, recentRefuelsResult] = await Promise.all([
     supabase.from("vehicles").select("status"),
-    supabase.from("refuel_summary").select("*").order("refuel_date", { ascending: false }).limit(5),
+    supabase.from("refuel_analytics").select("*").order("refuel_date", { ascending: false }).limit(5),
   ])
 
   const vehicleStats = {
