@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import "@/styles/globals.css" // Added import for globals.css
+import "@/styles/globals.css" // Added CSS import to include global styling
 import { Analytics } from "@vercel/analytics/next"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { AuthProvider } from "@/hooks/use-auth"
