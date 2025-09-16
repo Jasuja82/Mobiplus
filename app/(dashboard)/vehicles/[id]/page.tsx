@@ -28,8 +28,8 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
       *,
       category:vehicle_categories(name),
       department:departments(name),
-      home_location:locations!vehicles_home_location_id_fkey(name, address),
-      current_location:locations!vehicles_current_location_id_fkey(name, address)
+      home_location:locations!home_location_id(name, address),
+      current_location:locations!current_location_id(name, address)
     `)
     .eq("id", params.id)
     .single()

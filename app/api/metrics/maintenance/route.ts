@@ -41,24 +41,25 @@ export async function GET(request: NextRequest) {
     const { data: locations } = await supabase.from("locations").select("id, name").eq("is_active", true)
 
     // Fetch departments
-    const { data: departments } = await supabase.from("departments").select("id, name").eq("is_active", true)
+    const { data: departments } = await supabase.from("departments").select("id, name")
 
     // Fetch vehicles
     const { data: vehicles } = await supabase
       .from("vehicles")
-      .select("id, license_plate, vehicle_internal_number")
-      .eq("is_active", true)
+      .select("id, license_plate, internal_number")
+      .neq("status", "retired")
 
     // Fetch assignment types
-    const { data: assignments } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
+    const { data: assignments } = await supabase.from("assignment_types").select("id, name").eq("status", true)
 
-    // Fetch maintenance data
     const { data: maintenanceData } = await supabase
       .from("maintenance_interventions")
       .select(`
         *,
-        vehicles(license_plate, make, model, vehicle_internal_number),
-        maintenance_types(name)
+        vehicles(license_plate, make, model, internal_number),
+        schedule:maintenance_schedules(
+          category:maintenance_categories(name)
+        )
       `)
       .gte("intervention_date", dateFrom.toISOString())
       .lte("intervention_date", dateTo.toISOString())
@@ -69,10 +70,10 @@ export async function GET(request: NextRequest) {
     const averageCost = totalInterventions > 0 ? totalCost / totalInterventions : 0
 
     // Calculate average duration
-    const durationsData = maintenanceData?.filter((m) => m.duration_hours) || []
+    const durationsData = maintenanceData?.filter((m) => m.labor_hours) || []
     const averageDuration =
       durationsData.length > 0
-        ? durationsData.reduce((sum, m) => sum + (m.duration_hours || 0), 0) / durationsData.length
+        ? durationsData.reduce((sum, m) => sum + (m.labor_hours || 0), 0) / durationsData.length
         : 0
 
     // Calculate monthly trends
@@ -96,11 +97,10 @@ export async function GET(request: NextRequest) {
       interventions: data.interventions,
     }))
 
-    // Calculate maintenance types breakdown
     const typeData =
       maintenanceData?.reduce(
         (acc, record) => {
-          const type = record.maintenance_types?.name || "Other"
+          const type = record.schedule?.category?.name || "Other"
           if (!acc[type]) {
             acc[type] = { count: 0, cost: 0 }
           }
@@ -133,13 +133,12 @@ export async function GET(request: NextRequest) {
         .filter((v) => v.cost > 0)
         .sort((a, b) => b.cost - a.cost) || []
 
-    // Fetch upcoming maintenance
     const { data: upcomingMaintenance } = await supabase
-      .from("maintenance_interventions")
+      .from("maintenance_schedules")
       .select(`
         *,
-        vehicles(license_plate),
-        maintenance_types(name)
+        vehicle:vehicles(license_plate),
+        category:maintenance_categories(name)
       `)
       .gte("scheduled_date", new Date().toISOString())
       .eq("status", "scheduled")
@@ -148,8 +147,8 @@ export async function GET(request: NextRequest) {
 
     const upcomingMaintenanceFormatted =
       upcomingMaintenance?.map((m) => ({
-        vehicle: m.vehicles?.license_plate || "Unknown",
-        type: m.maintenance_types?.name || "Unknown",
+        vehicle: m.vehicle?.license_plate || "Unknown",
+        type: m.category?.name || "Unknown",
         date: new Date(m.scheduled_date).toLocaleDateString("pt-PT"),
         estimatedCost: m.estimated_cost || 0,
       })) || []

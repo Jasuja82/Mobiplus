@@ -22,15 +22,19 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
     redirect("/login")
   }
 
+  const driverId = Number.parseInt(params.id)
+  if (isNaN(driverId)) {
+    notFound()
+  }
+
   // Get driver with all related data
   const { data: driver, error } = await supabase
     .from("drivers")
     .select(`
       *,
-      user:users(name, email, phone),
       department:departments(name, description)
     `)
-    .eq("id", params.id)
+    .eq("id", driverId)
     .single()
 
   if (error || !driver) {
@@ -50,7 +54,7 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
         vehicle_number
       )
     `)
-    .eq("driver_id", params.id)
+    .eq("driver_id", driverId)
     .eq("is_active", true)
 
   // Get assignment history
@@ -67,7 +71,7 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
       ),
       assigned_by_user:users!vehicle_assignments_assigned_by_fkey(name)
     `)
-    .eq("driver_id", params.id)
+    .eq("driver_id", driverId)
     .order("assigned_at", { ascending: false })
     .limit(20)
 
@@ -78,7 +82,7 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
       *,
       vehicle:vehicles(license_plate, make, model)
     `)
-    .eq("driver_id", params.id)
+    .eq("driver_id", driverId)
     .order("refuel_date", { ascending: false })
     .limit(20)
 
@@ -119,11 +123,11 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
           <div>
             <h1 className="text-2xl font-bold">Detalhes do condutor</h1>
             <div className="flex items-center gap-3 mt-2">
-              <span className="text-xl font-semibold">{driver.user?.name || driver.name}</span>
+              <span className="text-xl font-semibold">{driver.name}</span>
               <Badge variant={driver.is_active ? "default" : "secondary"}>
                 {driver.is_active ? "Ativo" : "Inativo"}
               </Badge>
-              {isLicenseExpiringSoon(driver.license_expiry) && (
+              {driver.license_expiry && isLicenseExpiringSoon(driver.license_expiry) && (
                 <Badge variant="destructive">Carta expira em breve</Badge>
               )}
               {driver.medical_certificate_expiry && isLicenseExpiringSoon(driver.medical_certificate_expiry) && (
@@ -138,8 +142,6 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
                 </>
               )}
               <span>Departamento: {driver.department?.name || "Não atribuído"}</span>
-              <span>•</span>
-              <span>Email: {driver.user?.email || "Não disponível"}</span>
             </div>
             {driver.internal_number && (
               <p className="text-sm text-muted-foreground mt-1">Nº Interno: {driver.internal_number}</p>

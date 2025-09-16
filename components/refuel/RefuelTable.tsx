@@ -32,10 +32,10 @@ type RefuelRecordWithRelations = RefuelRecord & {
     internal_number?: string
   } | null
   driver?: {
-    id: string
+    id: number
     name: string
     internal_number?: string
-    license_number: string
+    license_number?: string
   } | null
   fuel_station?: {
     id: string

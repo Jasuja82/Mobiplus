@@ -34,9 +34,11 @@ export default async function RefuelPage() {
         name,
         brand
       ),
-      driver:users!refuel_records_driver_id_fkey(
+      driver:drivers(
         id,
-        name
+        name,
+        internal_number,
+        license_number
       ),
       created_by_user:users!refuel_records_created_by_fkey(name)
     `)
@@ -49,7 +51,11 @@ export default async function RefuelPage() {
     .eq("status", "active")
     .order("vehicle_number")
 
-  const { data: drivers } = await supabase.from("users").select("id, name").eq("is_active", true).order("name")
+  const { data: drivers } = await supabase
+    .from("drivers")
+    .select("id, name, internal_number")
+    .eq("is_active", true)
+    .order("name")
 
   if (error) {
     console.error("Error fetching refuel records:", error.message)

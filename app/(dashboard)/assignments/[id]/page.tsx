@@ -36,7 +36,7 @@ export default async function AssignmentDetailPage({ params }: AssignmentDetailP
       *,
       department:departments(name),
       category:vehicle_categories(name),
-      home_location:locations!vehicles_home_location_id_fkey(name, address)
+      home_location:locations!home_location_id(name, address)
     `)
     .eq("assignment_type_id", params.id)
     .order("license_plate", { ascending: true })
