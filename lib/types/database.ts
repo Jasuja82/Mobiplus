@@ -9,16 +9,16 @@ export interface AssignmentType {
 }
 
 export interface Department {
-  id: string
-  name: string
-  code?: string
-  description?: string
-  manager_id?: string
-  location_id?: string
-  budget_limit?: number
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  id: string // varchar, default gen_random_uuid()
+  name: string // varchar, unique
+  code?: string // varchar(10), unique
+  description?: string // text
+  manager_id?: string // varchar
+  location_id?: string // varchar, FK to locations
+  budget_limit?: number // numeric(12,2)
+  is_active?: boolean // default true
+  created_at?: string // timestamp with time zone
+  updated_at?: string // timestamp with time zone
 }
 
 export interface MaintenanceSchedule {
@@ -85,37 +85,37 @@ export interface RefuelAnalytics {
 
 // Update existing types to be consistent
 export interface Vehicle {
-  id: string
-  license_plate: string
-  internal_number?: string
-  vehicle_number?: string
-  vin?: string
-  status: "active" | "maintenance" | "inactive" | "retired"
-  current_mileage: number
-  department_id?: string
-  current_location_id?: string
-  home_location_id?: string
-  vehicle_details_id?: string
-  purchase_date?: string
-  purchase_price?: number
-  registration_date?: string
-  insurance_policy?: string
-  insurance_expiry?: string
-  inspection_expiry?: string
-  notes?: string
-  created_at: string
-  updated_at: string
+  id: string // varchar(20)
+  vehicle_details_id?: string // varchar(20)
+  license_plate: string // varchar(20), unique
+  vin?: string // varchar(50), unique
+  vehicle_number?: string // varchar(50)
+  internal_number?: string // varchar(50)
+  department_id?: string // varchar(20)
+  home_location_id?: string // varchar(20), FK to locations
+  current_location_id?: string // varchar(20), FK to locations
+  status?: "active" | "maintenance" | "inactive" | "retired" // enum vehicle_status, default 'active'
+  purchase_date?: string // date
+  purchase_price?: number // numeric(12,2)
+  registration_date?: string // date
+  current_mileage?: number // integer, default 0
+  insurance_policy?: string // varchar(100)
+  insurance_expiry?: string // date
+  inspection_expiry?: string // date
+  notes?: string // text
+  created_at?: string // timestamp with time zone
+  updated_at?: string // timestamp with time zone
 }
 
 export interface Assignment {
-  id: string
-  vehicle_id: string
-  name: string
-  type: string // references assignment_types.name
-  notes?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
+  id: string // varchar(20)
+  vehicle_id: string // varchar(20)
+  name: string // varchar(20)
+  type?: string // text, FK to assignment_types(name)
+  is_active?: boolean // default true
+  notes?: string // text
+  created_at?: string // timestamp with time zone
+  updated_at?: string // timestamp with time zone
 }
 
 export interface RefuelRecord {
@@ -132,4 +132,53 @@ export interface RefuelRecord {
   notes?: string
   created_at: string
   updated_at: string
+}
+
+export interface Driver {
+  id: string // varchar(20)
+  code?: string // varchar(50), unique
+  full_name: string // varchar(200)
+  license_number?: string // varchar(100)
+  license_expiry?: string // date
+  medical_certificate_expiry?: string // date
+  is_active?: boolean // default true
+  status?: boolean
+  dob?: string // date
+  created_at?: string // timestamp with time zone
+  updated_at?: string // timestamp with time zone
+}
+
+export interface Location {
+  id: string // varchar(20)
+  name: string // varchar(200)
+  address?: string // text
+  coordinates?: string // point (stored as string in JSON)
+  location_type?: string // varchar(50)
+  is_active?: boolean // default true
+  created_at?: string // timestamp with time zone
+  updated_at?: string // timestamp with time zone
+}
+
+export interface FuelStation {
+  id: string // varchar(20)
+  name: string // varchar(200)
+  brand?: string // varchar(100)
+  address?: string // text
+  location_id?: string // varchar(20), FK to locations
+  coordinates?: string // point (stored as string in JSON)
+  fuel_types?: string // text
+  is_active?: boolean // default true
+  created_at?: string // timestamp with time zone
+  updated_at?: string // timestamp with time zone
+}
+
+export interface FuelPricePerMonth {
+  id: string // varchar(20)
+  year: number // integer
+  month: number // integer, check (month >= 1 and month <= 12)
+  fuel_type: "gasoline" | "diesel" | "electric" | "hybrid" // enum fuel_type
+  price_per_liter: number // numeric(6,3)
+  region?: string // varchar(100), default 'Azores'
+  created_at?: string // timestamp with time zone
+  updated_at?: string // timestamp with time zone
 }
