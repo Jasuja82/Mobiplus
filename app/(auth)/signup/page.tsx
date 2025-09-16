@@ -93,15 +93,12 @@ export default function SignupPage() {
         }
       } else if (data.user) {
         setSuccess(true)
-        console.log("✅ User registered:", data.user.email)
-
         // Show success message for a moment then redirect
         setTimeout(() => {
           router.push("/signup-success")
         }, 2000)
       }
     } catch (err) {
-      console.error("Signup error:", err)
       setError("Erro inesperado durante o registo")
     } finally {
       setLoading(false)

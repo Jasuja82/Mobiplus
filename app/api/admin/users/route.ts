@@ -18,13 +18,11 @@ export async function GET() {
     const { data: users, error } = await supabase.from("users").select("*").order("created_at", { ascending: false })
 
     if (error) {
-      console.error("Database error:", error)
       return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
     }
 
     return NextResponse.json({ users: users || [] })
   } catch (error) {
-    console.error("Error fetching users:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -74,7 +72,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ user })
   } catch (error) {
-    console.error("Error creating user:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
