@@ -44,7 +44,7 @@ export function RecentActivity({ refuels }: RecentActivityProps) {
             refuels.map((refuel) => (
               <div key={refuel.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <Fuel className="h-4 w-4 text-blue-600" />
+                  <Fuel className="h-4 w-4 text-primary" />
                   <div>
                     <p className="text-sm font-medium">Abastecimento - {refuel.vehicle?.license_plate}</p>
                     <p className="text-xs text-muted-foreground">

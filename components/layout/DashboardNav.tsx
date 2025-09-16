@@ -22,8 +22,8 @@ export function DashboardNav() {
     <nav className="w-64 bg-white shadow-sm border-r">
       <div className="p-6">
         <div className="flex items-center gap-2 mb-8">
-          <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">M</span>
           </div>
           <span className="font-semibold text-lg">MobiAzores</span>
         </div>
@@ -37,7 +37,8 @@ export function DashboardNav() {
                   href={item.href}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    isActive ? "bg-blue-50 text-blue-700" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                    /* Updated active state to use primary color */
+                    isActive ? "bg-primary/10 text-primary" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
                   )}
                 >
                   <item.icon className="h-5 w-5" />

@@ -21,7 +21,8 @@ interface UpcomingMaintenanceProps {
 const priorityColors = {
   1: "bg-green-100 text-green-800",
   2: "bg-yellow-100 text-yellow-800",
-  3: "bg-orange-100 text-orange-800",
+  /* Updated high priority to use accent color */
+  3: "bg-accent/10 text-accent",
   4: "bg-red-100 text-red-800",
 }
 

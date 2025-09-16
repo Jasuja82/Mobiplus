@@ -17,16 +17,16 @@ export function DashboardOverview({ vehicleStats }: DashboardOverviewProps) {
       value: vehicleStats.active,
       description: "Disponíveis para uso",
       icon: Car,
-      bgColor: "bg-green-100",
-      iconColor: "text-green-700",
+      bgColor: "bg-primary/10",
+      iconColor: "text-primary",
     },
     {
       title: "Em Manutenção",
       value: vehicleStats.maintenance,
       description: "Indisponíveis temporariamente",
       icon: Wrench,
-      bgColor: "bg-orange-100",
-      iconColor: "text-orange-700",
+      bgColor: "bg-accent/10",
+      iconColor: "text-accent",
     },
     {
       title: "Inativos",
@@ -41,8 +41,8 @@ export function DashboardOverview({ vehicleStats }: DashboardOverviewProps) {
       value: vehicleStats.total,
       description: "Todos os veículos",
       icon: CheckCircle,
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-700",
+      bgColor: "bg-primary/5",
+      iconColor: "text-primary/70",
     },
   ]
 
