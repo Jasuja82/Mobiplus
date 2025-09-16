@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Calculator } from "lucide-react"
 import Link from "next/link"
+import { odometerValidator, type OdometerValidationResult } from "@/lib/validations/odometer"
 
 interface Vehicle {
   id: string
@@ -53,6 +54,8 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [odometerValidation, setOdometerValidation] = useState<OdometerValidationResult | null>(null)
+  const [isValidatingOdometer, setIsValidatingOdometer] = useState(false)
   const router = useRouter()
 
   // Update selected vehicle when vehicle_id changes
@@ -83,6 +86,32 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
       }))
     }
   }, [formData.liters, formData.cost_per_liter])
+
+  useEffect(() => {
+    const validateOdometer = async () => {
+      if (formData.vehicle_id && formData.odometer_reading && formData.refuel_date) {
+        setIsValidatingOdometer(true)
+        try {
+          const validation = await odometerValidator.validateOdometerReading(
+            formData.vehicle_id,
+            Number(formData.odometer_reading),
+            formData.refuel_date,
+            refuelRecord?.id,
+          )
+          setOdometerValidation(validation)
+        } catch (error) {
+          console.error("Error validating odometer:", error)
+        } finally {
+          setIsValidatingOdometer(false)
+        }
+      } else {
+        setOdometerValidation(null)
+      }
+    }
+
+    const timeoutId = setTimeout(validateOdometer, 500) // Debounce validation
+    return () => clearTimeout(timeoutId)
+  }, [formData.vehicle_id, formData.odometer_reading, formData.refuel_date, refuelRecord?.id])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -117,6 +146,12 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
 
     if (Number(formData.odometer_reading) < 0) {
       setError("A quilometragem não pode ser negativa")
+      return false
+    }
+
+    // Check odometer validation results
+    if (odometerValidation && !odometerValidation.isValid) {
+      setError(`Erro na quilometragem: ${odometerValidation.errors.join(", ")}`)
       return false
     }
 
@@ -294,6 +329,38 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                   value={formData.odometer_reading}
                   onChange={handleInputChange}
                 />
+                {isValidatingOdometer && <p className="text-xs text-blue-600">🔍 Validando quilometragem...</p>}
+                {odometerValidation && (
+                  <div className="space-y-1">
+                    {odometerValidation.errors.map((error, i) => (
+                      <p key={i} className="text-xs text-red-600">
+                        ❌ {error}
+                      </p>
+                    ))}
+                    {odometerValidation.warnings.map((warning, i) => (
+                      <p key={i} className="text-xs text-yellow-600">
+                        ⚠️ {warning}
+                      </p>
+                    ))}
+                    {odometerValidation.suggestions.map((suggestion, i) => (
+                      <p key={i} className="text-xs text-green-600">
+                        💡 {suggestion}
+                      </p>
+                    ))}
+                    {odometerValidation.lastKnownReading && (
+                      <p className="text-xs text-gray-600">
+                        📊 Último registo: {odometerValidation.lastKnownReading.toLocaleString()} km
+                        {odometerValidation.lastRefuelDate &&
+                          ` (${new Date(odometerValidation.lastRefuelDate).toLocaleDateString()})`}
+                      </p>
+                    )}
+                    {odometerValidation.estimatedReading && (
+                      <p className="text-xs text-blue-600">
+                        🎯 Estimativa baseada no histórico: {odometerValidation.estimatedReading.toLocaleString()} km
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Liters */}
