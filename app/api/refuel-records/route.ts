@@ -7,11 +7,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
 
     let query = supabase
-      .from("refuel_analytics") // Use the compatibility view
-      .select("*")
+      .from("refuel_records")
+      .select(`
+        *,
+        vehicles:vehicle_id(license_plate, internal_number, make, model),
+        drivers:driver_id(full_name, code),
+        fuel_stations:fuel_station_id(name, brand)
+      `)
       .order("refuel_date", { ascending: false })
 
-    // Apply filters using the view's column names for backward compatibility
+    // Apply filters
     const vehicleId = searchParams.get("vehicle_id")
     const driverId = searchParams.get("driver_id")
     const dateFrom = searchParams.get("date_from")
