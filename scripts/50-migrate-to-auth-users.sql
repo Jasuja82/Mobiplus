@@ -49,26 +49,23 @@ CREATE POLICY "profiles_admin_all"
     )
   );
 
--- Update foreign key constraints to reference profiles instead of employees
--- Update departments manager_id to reference profiles
+-- Remove foreign key constraints that reference employees table
+-- Remove existing foreign key constraints before dropping employees table
 ALTER TABLE departments DROP CONSTRAINT IF EXISTS fk_departments_manager;
-ALTER TABLE departments ADD CONSTRAINT fk_departments_manager 
-    FOREIGN KEY (manager_id) REFERENCES profiles(id);
-
--- Update drivers employee_id to reference profiles
 ALTER TABLE drivers DROP CONSTRAINT IF EXISTS drivers_employee_id_fkey;
-ALTER TABLE drivers ADD CONSTRAINT drivers_employee_id_fkey 
-    FOREIGN KEY (employee_id) REFERENCES profiles(id);
-
--- Update assignments assigned_by to reference profiles
 ALTER TABLE assignments DROP CONSTRAINT IF EXISTS assignments_assigned_by_fkey;
-ALTER TABLE assignments ADD CONSTRAINT assignments_assigned_by_fkey 
-    FOREIGN KEY (assigned_by) REFERENCES profiles(id);
 
--- Update refuel_records created_by to reference profiles
-ALTER TABLE refuel_records DROP CONSTRAINT IF EXISTS refuel_records_created_by_fkey;
-ALTER TABLE refuel_records ADD CONSTRAINT refuel_records_created_by_fkey 
-    FOREIGN KEY (created_by) REFERENCES profiles(id);
+-- Set manager_id to NULL where it references non-existent employees
+-- Clean up orphaned references in departments table
+UPDATE departments SET manager_id = NULL WHERE manager_id IS NOT NULL;
+
+-- Set employee_id to NULL where it references non-existent employees  
+-- Clean up orphaned references in drivers table
+UPDATE drivers SET employee_id = NULL WHERE employee_id IS NOT NULL;
+
+-- Set assigned_by to NULL where it references non-existent employees
+-- Clean up orphaned references in assignments table
+UPDATE assignments SET assigned_by = NULL WHERE assigned_by IS NOT NULL;
 
 -- Create a trigger to auto-create profiles for new auth users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -128,9 +125,6 @@ SELECT
     rr.liters,
     rr.cost_per_liter,
     rr.total_cost,
-    rr.fuel_efficiency_l_per_100km,
-    rr.km_per_liter,
-    rr.cost_per_km,
     rr.notes,
     -- Vehicle information
     vs.license_plate as vehicle_number,
@@ -151,11 +145,12 @@ SELECT
     fs.brand as fuel_station_brand
 FROM refuel_records rr
 JOIN vehicle_summary vs ON rr.vehicle_id = vs.id
-LEFT JOIN locations l ON rr.location_id = l.id
+LEFT JOIN locations l ON vs.home_location_id = l.id
 LEFT JOIN drivers d ON rr.driver_id = d.id
 LEFT JOIN fuel_stations fs ON rr.fuel_station_id = fs.id;
 
--- Drop the old employees table (commented out for safety)
--- DROP TABLE IF EXISTS employees CASCADE;
+-- Drop the employees table after cleaning up references
+-- Now safe to drop the employees table since all foreign key constraints are removed
+DROP TABLE IF EXISTS employees CASCADE;
 
 COMMIT;
