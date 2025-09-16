@@ -16,6 +16,7 @@ import { odometerValidator, type OdometerValidationResult } from "@/lib/validati
 interface Vehicle {
   id: string
   license_plate: string
+  internal_number: string
   make_id: string | null
   model_id: string | null
   current_mileage: number
@@ -24,8 +25,29 @@ interface Vehicle {
 
 interface Driver {
   id: string
+  full_name: string
+  code: string
+}
+
+interface Location {
+  id: string
   name: string
-  internal_number: string
+  city: string
+  region: string
+}
+
+interface AssignmentType {
+  id: string
+  name: string
+  description: string
+  color: string
+}
+
+interface FuelStation {
+  id: string
+  name: string
+  brand: string
+  address: string
 }
 
 interface RefuelFormProps {
@@ -46,6 +68,8 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
     cost_per_liter: refuelRecord?.cost_per_liter || "",
     total_cost: refuelRecord?.total_cost || "",
     fuel_station_id: refuelRecord?.fuel_station_id || "",
+    location_id: refuelRecord?.location_id || "",
+    assignment_type_id: refuelRecord?.assignment_type_id || "",
     receipt_number: refuelRecord?.receipt_number || "",
     invoice_number: refuelRecord?.invoice_number || "",
     notes: refuelRecord?.notes || "",
@@ -56,7 +80,42 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [odometerValidation, setOdometerValidation] = useState<OdometerValidationResult | null>(null)
   const [isValidatingOdometer, setIsValidatingOdometer] = useState(false)
+
+  const [locations, setLocations] = useState<Location[]>([])
+  const [assignmentTypes, setAssignmentTypes] = useState<AssignmentType[]>([])
+  const [fuelStations, setFuelStations] = useState<FuelStation[]>([])
+  const [entitiesLoading, setEntitiesLoading] = useState(true)
+
   const router = useRouter()
+
+  useEffect(() => {
+    const loadEntities = async () => {
+      try {
+        const supabase = createClient()
+
+        // Load locations, assignment types, and fuel stations in parallel
+        const [locationsRes, assignmentTypesRes, fuelStationsRes] = await Promise.all([
+          supabase.from("locations").select("id, name, city, region").eq("is_active", true).order("name"),
+          supabase.from("assignment_types").select("id, name, description, color").eq("is_active", true).order("name"),
+          supabase.from("fuel_stations").select("id, name, brand, address").eq("is_active", true).order("name"),
+        ])
+
+        if (locationsRes.data) setLocations(locationsRes.data)
+        if (assignmentTypesRes.data) setAssignmentTypes(assignmentTypesRes.data)
+        if (fuelStationsRes.data) setFuelStations(fuelStationsRes.data)
+
+        if (locationsRes.error) console.error("Error loading locations:", locationsRes.error)
+        if (assignmentTypesRes.error) console.error("Error loading assignment types:", assignmentTypesRes.error)
+        if (fuelStationsRes.error) console.error("Error loading fuel stations:", fuelStationsRes.error)
+      } catch (error) {
+        console.error("Error loading entities:", error)
+      } finally {
+        setEntitiesLoading(false)
+      }
+    }
+
+    loadEntities()
+  }, [])
 
   // Update selected vehicle when vehicle_id changes
   useEffect(() => {
@@ -189,6 +248,8 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
         cost_per_liter: Number(formData.cost_per_liter),
         total_cost: Number(formData.total_cost),
         fuel_station_id: formData.fuel_station_id || null,
+        location_id: formData.location_id || null,
+        assignment_type_id: formData.assignment_type_id || null,
         receipt_number: formData.receipt_number || null,
         invoice_number: formData.invoice_number || null,
         notes: formData.notes || null,
@@ -240,14 +301,14 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
 
       <Card>
         <CardHeader>
-          <CardTitle>{refuelRecord ? "Editar Abastecimento" : "Dados do Abastecimento"}</CardTitle>
+          <CardTitle>{refuelRecord ? "Editar Abastecimento" : "Adicionar reabastecimento"}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Vehicle */}
               <div className="grid gap-2">
-                <Label htmlFor="vehicle_id">Veículo *</Label>
+                <Label htmlFor="vehicle_id">Veículos *</Label>
                 <select
                   id="vehicle_id"
                   name="vehicle_id"
@@ -259,7 +320,7 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                   <option value="">Selecionar veículo</option>
                   {vehicles.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.license_plate}
+                      {vehicle.internal_number.padStart(2, "0")} ({vehicle.license_plate})
                     </option>
                   ))}
                 </select>
@@ -271,24 +332,20 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                 )}
               </div>
 
-              {/* Driver */}
+              {/* Liters */}
               <div className="grid gap-2">
-                <Label htmlFor="driver_id">Condutor *</Label>
-                <select
-                  id="driver_id"
-                  name="driver_id"
+                <Label htmlFor="liters">Litros *</Label>
+                <Input
+                  id="liters"
+                  name="liters"
+                  type="number"
+                  step="0.01"
                   required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={formData.driver_id}
+                  min="0.01"
+                  placeholder="122.00"
+                  value={formData.liters}
                   onChange={handleInputChange}
-                >
-                  <option value="">Selecionar condutor</option>
-                  {drivers.map((driver) => (
-                    <option key={driver.id} value={driver.id}>
-                      {driver.name} ({driver.internal_number})
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Date */}
@@ -304,14 +361,18 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                 />
               </div>
 
-              {/* Time */}
+              {/* Cost per liter */}
               <div className="grid gap-2">
-                <Label htmlFor="refuel_time">Hora</Label>
+                <Label htmlFor="cost_per_liter">Preço por litro *</Label>
                 <Input
-                  id="refuel_time"
-                  name="refuel_time"
-                  type="time"
-                  value={formData.refuel_time}
+                  id="cost_per_liter"
+                  name="cost_per_liter"
+                  type="number"
+                  step="0.001"
+                  required
+                  min="0.001"
+                  placeholder="1.481 €"
+                  value={formData.cost_per_liter}
                   onChange={handleInputChange}
                 />
               </div>
@@ -392,41 +453,9 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                 )}
               </div>
 
-              {/* Liters */}
-              <div className="grid gap-2">
-                <Label htmlFor="liters">Litros *</Label>
-                <Input
-                  id="liters"
-                  name="liters"
-                  type="number"
-                  step="0.01"
-                  required
-                  min="0.01"
-                  placeholder="50.00"
-                  value={formData.liters}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              {/* Cost per liter */}
-              <div className="grid gap-2">
-                <Label htmlFor="cost_per_liter">Preço por Litro (€) *</Label>
-                <Input
-                  id="cost_per_liter"
-                  name="cost_per_liter"
-                  type="number"
-                  step="0.001"
-                  required
-                  min="0.001"
-                  placeholder="1.450"
-                  value={formData.cost_per_liter}
-                  onChange={handleInputChange}
-                />
-              </div>
-
               {/* Total cost */}
               <div className="grid gap-2">
-                <Label htmlFor="total_cost">Custo Total (€)</Label>
+                <Label htmlFor="total_cost">Custo total</Label>
                 <div className="relative">
                   <Input
                     id="total_cost"
@@ -434,67 +463,83 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="72.50"
+                    placeholder="178.24 €"
                     value={formData.total_cost}
                     onChange={handleInputChange}
+                    className="bg-gray-50"
+                    readOnly
                   />
                   <Calculator className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Calculado automaticamente:{" "}
-                  {formData.liters && formData.cost_per_liter
-                    ? `${formData.liters} × €${formData.cost_per_liter} = €${(Number(formData.liters) * Number(formData.cost_per_liter)).toFixed(2)}`
-                    : "Preencha litros e preço por litro"}
-                </p>
               </div>
 
-              {/* Receipt number */}
               <div className="grid gap-2">
-                <Label htmlFor="receipt_number">Número do Recibo</Label>
-                <Input
-                  id="receipt_number"
-                  name="receipt_number"
-                  placeholder="Número do recibo"
-                  value={formData.receipt_number}
+                <Label htmlFor="location_id">Localização *</Label>
+                <select
+                  id="location_id"
+                  name="location_id"
+                  required
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.location_id}
                   onChange={handleInputChange}
-                />
+                  disabled={entitiesLoading}
+                >
+                  <option value="">Selecionar localização</option>
+                  {locations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.name} - {location.city}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Invoice number */}
               <div className="grid gap-2">
-                <Label htmlFor="invoice_number">Número da Fatura</Label>
-                <Input
-                  id="invoice_number"
-                  name="invoice_number"
-                  placeholder="Número da fatura"
-                  value={formData.invoice_number}
+                <Label htmlFor="assignment_type_id">Atribuição</Label>
+                <select
+                  id="assignment_type_id"
+                  name="assignment_type_id"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.assignment_type_id}
                   onChange={handleInputChange}
-                />
+                  disabled={entitiesLoading}
+                >
+                  <option value="">Selecionar atribuição</option>
+                  {assignmentTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Full tank checkbox */}
+              {/* Driver */}
               <div className="grid gap-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="is_full_tank"
-                    name="is_full_tank"
-                    type="checkbox"
-                    checked={formData.is_full_tank}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <Label htmlFor="is_full_tank">Depósito Cheio</Label>
-                </div>
+                <Label htmlFor="driver_id">Condutor</Label>
+                <select
+                  id="driver_id"
+                  name="driver_id"
+                  required
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.driver_id}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Selecionar condutor</option>
+                  {drivers.map((driver) => (
+                    <option key={driver.id} value={driver.id}>
+                      {driver.full_name} ({driver.code})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             {/* Notes */}
             <div className="grid gap-2">
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="notes">Notas</Label>
               <Textarea
                 id="notes"
                 name="notes"
-                placeholder="Observações adicionais sobre o abastecimento..."
+                placeholder="Introduzir notas adicionais"
                 value={formData.notes}
                 onChange={handleInputChange}
               />
@@ -507,22 +552,22 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
             )}
 
             <div className="flex gap-4">
-              <Button type="submit" disabled={loading}>
-                {loading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>A guardar...
-                  </div>
-                ) : refuelRecord ? (
-                  "Atualizar Abastecimento"
-                ) : (
-                  "Registar Abastecimento"
-                )}
-              </Button>
               <Link href="/refuel">
                 <Button type="button" variant="outline">
                   Cancelar
                 </Button>
               </Link>
+              <Button type="submit" disabled={loading || entitiesLoading}>
+                {loading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>A guardar...
+                  </div>
+                ) : refuelRecord ? (
+                  "Atualizar"
+                ) : (
+                  "Gravar"
+                )}
+              </Button>
             </div>
           </form>
         </CardContent>
