@@ -12,22 +12,13 @@ export default async function NewRefuelPage() {
     redirect("/login")
   }
 
-  // Get vehicles and drivers for the form
   const [vehiclesResult, driversResult] = await Promise.all([
     supabase
       .from("vehicles")
-      .select("id, license_plate, make, model, current_mileage, fuel_capacity")
+      .select("id, license_plate, make_id, model_id, current_mileage, fuel_capacity")
       .eq("status", "active")
       .order("license_plate"),
-    supabase
-      .from("drivers")
-      .select(`
-        id,
-        license_number,
-        user:users(name)
-      `)
-      .eq("is_active", true)
-      .order("license_number"),
+    supabase.from("drivers").select("id, name, internal_number").eq("status", "active").order("name"),
   ])
 
   return (

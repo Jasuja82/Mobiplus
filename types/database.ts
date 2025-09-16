@@ -29,6 +29,18 @@ export type LocationRow = Tables<"locations">
 export type LocationInsert = TablesInsert<"locations">
 export type LocationUpdate = TablesUpdate<"locations">
 
-export type UserRow = Tables<"users">
-export type UserInsert = TablesInsert<"users">
-export type UserUpdate = TablesUpdate<"users">
+export type FuelStationRow = Tables<"fuel_stations">
+export type FuelStationInsert = TablesInsert<"fuel_stations">
+export type FuelStationUpdate = TablesUpdate<"fuel_stations">
+
+export type AssignmentRow = Tables<"assignments">
+export type AssignmentInsert = TablesInsert<"assignments">
+export type AssignmentUpdate = TablesUpdate<"assignments">
+
+export type EmployeeRow = Tables<"employees">
+export type EmployeeInsert = TablesInsert<"employees">
+export type EmployeeUpdate = TablesUpdate<"employees">
+
+export type FuelPricePerMonthRow = Tables<"fuel_price_per_month">
+export type FuelPricePerMonthInsert = TablesInsert<"fuel_price_per_month">
+export type FuelPricePerMonthUpdate = TablesUpdate<"fuel_price_per_month">

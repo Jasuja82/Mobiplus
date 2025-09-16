@@ -1,14 +1,13 @@
 export interface Driver {
   id: string
-  user_id: string | null
-  name: string // Added name field that exists in database
-  internal_number: string // Added internal_number field that exists in database
-  license_number: string | null
-  license_expiry: string | null
-  license_categories: string[] | null
-  medical_certificate_expiry: string | null
-  department_id: string | null
-  is_active: boolean
+  internal_number: string
+  name: string
+  dob: string | null
+  license_type_id: string | null
+  status: string
+  phone: string | null
+  email: string | null
+  hire_date: string | null
   created_at: string
   updated_at: string
 }

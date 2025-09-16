@@ -5,15 +5,33 @@ import type {
   Driver,
   Vehicle,
   RefuelRecord,
-  MaintenanceRecord,
-  AssignmentType,
-  VehicleWithRelations,
-  RefuelWithRelations,
+  Assignment,
+  Employee,
   FuelStation,
-} from "@/types"
+  FuelPricePerMonth,
+  Make,
+  Model,
+  EngineType,
+  VehicleDetails,
+  LicenseType,
+} from "@/types/entities"
 
-// Re-export for backward compatibility
-export type { Department, Location, Driver, Vehicle, RefuelRecord, MaintenanceRecord, AssignmentType, FuelStation }
+export type {
+  Department,
+  Location,
+  Driver,
+  Vehicle,
+  RefuelRecord,
+  Assignment,
+  Employee,
+  FuelStation,
+  FuelPricePerMonth,
+  Make,
+  Model,
+  EngineType,
+  VehicleDetails,
+  LicenseType,
+}
 
 export class DatabaseService {
   private _supabase: ReturnType<typeof createServerSupabaseClient> | null = null
@@ -61,10 +79,8 @@ export class DatabaseService {
   }
 
   // Locations
-  async getLocations(type?: Location["location_type"]) {
-    const query = this.supabase.from("locations").select("*").eq("is_active", true)
-
-    const { data, error } = await query.order("name")
+  async getLocations() {
+    const { data, error } = await this.supabase.from("locations").select("*").eq("is_active", true).order("name")
 
     if (error) throw error
     return data as Location[]
@@ -99,13 +115,7 @@ export class DatabaseService {
 
   // Drivers
   async getDrivers(departmentId?: string) {
-    let query = this.supabase
-      .from("drivers")
-      .select(`
-        *,
-        department:departments(*)
-      `)
-      .eq("status", "active")
+    let query = this.supabase.from("drivers").select("*").eq("status", "active")
 
     if (departmentId) {
       query = query.eq("department_id", departmentId)
@@ -117,30 +127,36 @@ export class DatabaseService {
     return data as Driver[]
   }
 
-  async createDriver(driver: Omit<Driver, "id" | "created_at" | "updated_at">) {
-    const { data, error } = await this.supabase
-      .from("drivers")
-      .insert(driver)
-      .select(`
-        *,
-        department:departments(*)
-      `)
-      .single()
+  async getDriver(id: string) {
+    const { data, error } = await this.supabase.from("drivers").select("*").eq("id", id).single()
 
     if (error) throw error
     return data as Driver
   }
 
+  async createDriver(driver: Omit<Driver, "id" | "created_at" | "updated_at">) {
+    const { data, error } = await this.supabase.from("drivers").insert(driver).select().single()
+
+    if (error) throw error
+    return data as Driver
+  }
+
+  async updateDriver(id: string, updates: Partial<Driver>) {
+    const { data, error } = await this.supabase.from("drivers").update(updates).eq("id", id).select().single()
+
+    if (error) throw error
+    return data as Driver
+  }
+
+  async deleteDriver(id: string) {
+    const { error } = await this.supabase.from("drivers").delete().eq("id", id)
+
+    if (error) throw error
+  }
+
   // Vehicles
   async getVehicles(departmentId?: string) {
-    let query = this.supabase
-      .from("vehicles")
-      .select(`
-        *,
-        department:departments(*),
-        home_location:locations(*)
-      `)
-      .neq("status", "retired")
+    let query = this.supabase.from("vehicle_summary").select("*").neq("status", "retired")
 
     if (departmentId) {
       query = query.eq("department_id", departmentId)
@@ -149,50 +165,25 @@ export class DatabaseService {
     const { data, error } = await query.order("internal_number")
 
     if (error) throw error
-    return data as VehicleWithRelations[]
-  }
-
-  async createVehicle(vehicle: Omit<Vehicle, "id" | "created_at" | "updated_at">): Promise<VehicleWithRelations> {
-    const { data, error } = await this.supabase
-      .from("vehicles")
-      .insert(vehicle)
-      .select(`
-        *,
-        department:departments(*),
-        home_location:locations(*)
-      `)
-      .single()
-
-    if (error) throw error
-    return data as VehicleWithRelations
+    return data
   }
 
   async getVehicle(id: string) {
-    const { data, error } = await this.supabase
-      .from("vehicles")
-      .select(`
-        *,
-        department:departments(*),
-        home_location:locations(*)
-      `)
-      .eq("id", id)
-      .single()
+    const { data, error } = await this.supabase.from("vehicles").select("*").eq("id", id).single()
+
+    if (error) throw error
+    return data as Vehicle
+  }
+
+  async createVehicle(vehicle: Omit<Vehicle, "id" | "created_at" | "updated_at">) {
+    const { data, error } = await this.supabase.from("vehicles").insert(vehicle).select().single()
 
     if (error) throw error
     return data as Vehicle
   }
 
   async updateVehicle(id: string, updates: Partial<Vehicle>) {
-    const { data, error } = await this.supabase
-      .from("vehicles")
-      .update(updates)
-      .eq("id", id)
-      .select(`
-        *,
-        department:departments(*),
-        home_location:locations(*)
-      `)
-      .single()
+    const { data, error } = await this.supabase.from("vehicles").update(updates).eq("id", id).select().single()
 
     if (error) throw error
     return data as Vehicle
@@ -213,12 +204,7 @@ export class DatabaseService {
     dateTo?: string
     limit?: number
   }) {
-    let query = this.supabase.from("refuel_records").select(`
-        *,
-        vehicle:vehicles(*),
-        driver:drivers(*),
-        location:locations(*)
-      `)
+    let query = this.supabase.from("refuel_summary").select("*")
 
     if (filters?.vehicleId) {
       query = query.eq("vehicle_id", filters.vehicleId)
@@ -236,95 +222,54 @@ export class DatabaseService {
       query = query.lte("refuel_date", filters.dateTo)
     }
 
-    if (filters?.departmentId) {
-      query = query.eq("vehicle.department_id", filters.departmentId)
-    }
-
-    const { data, error } = await query
-      .order("refuel_date", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(filters?.limit || 100)
+    const { data, error } = await query.order("refuel_date", { ascending: false }).limit(filters?.limit || 100)
 
     if (error) throw error
-    return data as RefuelWithRelations[]
+    return data
   }
 
-  async createRefuelRecord(
-    record: Omit<RefuelRecord, "id" | "created_at" | "updated_at">,
-  ): Promise<RefuelWithRelations> {
-    const { data, error } = await this.supabase
-      .from("refuel_records")
-      .insert(record)
-      .select(`
-        *,
-        vehicle:vehicles(*),
-        driver:drivers(*),
-        location:locations(*)
-      `)
-      .single()
-
-    if (error) throw error
-    return data as RefuelWithRelations
-  }
-
-  async bulkCreateRefuelRecords(
-    records: Omit<RefuelRecord, "id" | "created_at" | "updated_at">[],
-  ): Promise<RefuelWithRelations[]> {
-    const { data, error } = await this.supabase.from("refuel_records").insert(records).select()
-
-    if (error) throw error
-    return data as RefuelWithRelations[]
-  }
-
-  async getRefuelRecord(id: string): Promise<RefuelWithRelations | null> {
-    const { data, error } = await this.supabase
-      .from("refuel_records")
-      .select(`
-        *,
-        vehicle:vehicles(*),
-        driver:drivers(*),
-        fuel_station:fuel_stations(*),
-        location:locations(*)
-      `)
-      .eq("id", id)
-      .single()
+  async getRefuelRecord(id: string) {
+    const { data, error } = await this.supabase.from("refuel_records").select("*").eq("id", id).single()
 
     if (error) {
-      if (error.code === "PGRST116") return null // Record not found
+      if (error.code === "PGRST116") return null
       throw error
     }
-    return data as RefuelWithRelations
+    return data as RefuelRecord
   }
 
-  async updateRefuelRecord(id: string, updates: Partial<RefuelRecord>): Promise<RefuelWithRelations | null> {
-    const { data, error } = await this.supabase
-      .from("refuel_records")
-      .update(updates)
-      .eq("id", id)
-      .select(`
-        *,
-        vehicle:vehicles(*),
-        driver:drivers(*),
-        fuel_station:fuel_stations(*),
-        location:locations(*)
-      `)
-      .single()
+  async createRefuelRecord(record: Omit<RefuelRecord, "id" | "created_at" | "updated_at">) {
+    const { data, error } = await this.supabase.from("refuel_records").insert(record).select().single()
+
+    if (error) throw error
+    return data as RefuelRecord
+  }
+
+  async updateRefuelRecord(id: string, updates: Partial<RefuelRecord>) {
+    const { data, error } = await this.supabase.from("refuel_records").update(updates).eq("id", id).select().single()
 
     if (error) {
-      if (error.code === "PGRST116") return null // Record not found
+      if (error.code === "PGRST116") return null
       throw error
     }
-    return data as RefuelWithRelations
+    return data as RefuelRecord
   }
 
-  async deleteRefuelRecord(id: string): Promise<boolean> {
+  async deleteRefuelRecord(id: string) {
     const { error } = await this.supabase.from("refuel_records").delete().eq("id", id)
 
     if (error) {
-      if (error.code === "PGRST116") return false // Record not found
+      if (error.code === "PGRST116") return false
       throw error
     }
     return true
+  }
+
+  async bulkCreateRefuelRecords(records: Omit<RefuelRecord, "id" | "created_at" | "updated_at">[]) {
+    const { data, error } = await this.supabase.from("refuel_records").insert(records).select()
+
+    if (error) throw error
+    return data as RefuelRecord[]
   }
 
   // Fuel Stations
@@ -332,12 +277,121 @@ export class DatabaseService {
     const { data, error } = await this.supabase
       .from("fuel_stations")
       .select("*")
-      .eq("is_active", true)
-      .order("brand")
-      .order("name")
+      .eq("status", "active")
+      .order("location")
 
     if (error) throw error
     return data as FuelStation[]
+  }
+
+  async getFuelStation(id: string) {
+    const { data, error } = await this.supabase.from("fuel_stations").select("*").eq("id", id).single()
+
+    if (error) throw error
+    return data as FuelStation
+  }
+
+  async createFuelStation(fuelStation: Omit<FuelStation, "id" | "created_at" | "updated_at">) {
+    const { data, error } = await this.supabase.from("fuel_stations").insert(fuelStation).select().single()
+
+    if (error) throw error
+    return data as FuelStation
+  }
+
+  // Assignments
+  async getAssignments() {
+    const { data, error } = await this.supabase.from("assignments").select("*").eq("status", "active").order("name")
+
+    if (error) throw error
+    return data as Assignment[]
+  }
+
+  async createAssignment(assignment: Omit<Assignment, "id" | "created_at" | "updated_at">) {
+    const { data, error } = await this.supabase.from("assignments").insert(assignment).select().single()
+
+    if (error) throw error
+    return data as Assignment
+  }
+
+  // Employees
+  async getEmployees(departmentId?: string) {
+    let query = this.supabase.from("employees").select("*").eq("status", "active")
+
+    if (departmentId) {
+      query = query.eq("department_id", departmentId)
+    }
+
+    const { data, error } = await query.order("name")
+
+    if (error) throw error
+    return data as Employee[]
+  }
+
+  async createEmployee(employee: Omit<Employee, "id" | "created_at" | "updated_at">) {
+    const { data, error } = await this.supabase.from("employees").insert(employee).select().single()
+
+    if (error) throw error
+    return data as Employee
+  }
+
+  // Reference data
+  async getMakes() {
+    const { data, error } = await this.supabase.from("makes").select("*").order("name")
+
+    if (error) throw error
+    return data as Make[]
+  }
+
+  async getModels(makeId?: string) {
+    let query = this.supabase.from("models").select("*")
+
+    if (makeId) {
+      query = query.eq("make_id", makeId)
+    }
+
+    const { data, error } = await query.order("name")
+
+    if (error) throw error
+    return data as Model[]
+  }
+
+  async getEngineTypes() {
+    const { data, error } = await this.supabase.from("engine_types").select("*").order("name")
+
+    if (error) throw error
+    return data as EngineType[]
+  }
+
+  async getLicenseTypes() {
+    const { data, error } = await this.supabase.from("license_types").select("*").order("name")
+
+    if (error) throw error
+    return data as LicenseType[]
+  }
+
+  // Fuel Prices
+  async getFuelPrices(year?: number, month?: number) {
+    let query = this.supabase.from("fuel_price_per_month").select("*")
+
+    if (year) {
+      query = query.eq("year", year)
+    }
+
+    if (month) {
+      query = query.eq("month", month)
+    }
+
+    const { data, error } = await query.order("year", { ascending: false }).order("month", { ascending: false })
+
+    if (error) throw error
+    return data as FuelPricePerMonth[]
+  }
+
+  async createFuelPrice(fuelPrice: Omit<FuelPricePerMonth, "id" | "created_at" | "updated_at">) {
+    const { data, error } = await this.supabase.from("fuel_price_per_month").insert(fuelPrice).select().single()
+
+    if (error) throw error
+    return data as FuelPricePerMonth
   }
 
   // Analytics
@@ -346,67 +400,34 @@ export class DatabaseService {
     dateFrom?: string
     dateTo?: string
   }) {
-    // This would typically be a more complex query or stored procedure
-    // For now, we'll return mock data structure
-    return {
-      totalVehicles: 45,
-      activeVehicles: 42,
-      totalFuelCost: 28450.75,
-      avgFuelEfficiency: 8.2,
-      maintenanceCost: 12300.5,
-      totalDistance: 125430,
-      trends: {
-        fuelCost: 5.2,
-        efficiency: -2.1,
-        maintenance: 8.7,
-        distance: 3.4,
-      },
+    // Use the analytics views created in the database
+    const { data: vehicleCount, error: vehicleError } = await this.supabase
+      .from("vehicles")
+      .select("id", { count: "exact" })
+      .neq("status", "retired")
+
+    const { data: refuelData, error: refuelError } = await this.supabase
+      .from("refuel_records")
+      .select("total_cost, liters, odometer_difference")
+      .gte("refuel_date", filters?.dateFrom || "2024-01-01")
+      .lte("refuel_date", filters?.dateTo || new Date().toISOString())
+
+    if (vehicleError || refuelError) {
+      throw vehicleError || refuelError
     }
-  }
 
-  async getDepartmentAnalytics(departmentId: string, dateFrom: string, dateTo: string) {
-    const { data, error } = await this.supabase.rpc("get_department_analytics", {
-      dept_id: departmentId,
-      date_from: dateFrom,
-      date_to: dateTo,
-    })
+    const totalCost = refuelData?.reduce((sum, record) => sum + (record.total_cost || 0), 0) || 0
+    const totalLiters = refuelData?.reduce((sum, record) => sum + (record.liters || 0), 0) || 0
+    const totalDistance = refuelData?.reduce((sum, record) => sum + (record.odometer_difference || 0), 0) || 0
 
-    if (error) throw error
-    return data
-  }
-
-  async getAssignmentTypes() {
-    const { data, error } = await this.supabase.from("assignment_types").select("*").order("name")
-
-    if (error) throw error
-    return data as AssignmentType[]
-  }
-
-  async getAssignmentType(id: string) {
-    const { data, error } = await this.supabase.from("assignment_types").select("*").eq("id", id).single()
-
-    if (error) throw error
-    return data as AssignmentType
-  }
-
-  async createAssignmentType(assignmentType: Omit<AssignmentType, "id" | "created_at">) {
-    const { data, error } = await this.supabase.from("assignment_types").insert(assignmentType).select().single()
-
-    if (error) throw error
-    return data as AssignmentType
-  }
-
-  async updateAssignmentType(id: string, updates: Partial<AssignmentType>) {
-    const { data, error } = await this.supabase.from("assignment_types").update(updates).eq("id", id).select().single()
-
-    if (error) throw error
-    return data as AssignmentType
-  }
-
-  async deleteAssignmentType(id: string) {
-    const { error } = await this.supabase.from("assignment_types").delete().eq("id", id)
-
-    if (error) throw error
+    return {
+      totalVehicles: vehicleCount?.length || 0,
+      activeVehicles: vehicleCount?.length || 0,
+      totalFuelCost: totalCost,
+      avgFuelEfficiency: totalDistance > 0 ? (totalLiters / totalDistance) * 100 : 0,
+      totalDistance,
+      totalRefuels: refuelData?.length || 0,
+    }
   }
 }
 

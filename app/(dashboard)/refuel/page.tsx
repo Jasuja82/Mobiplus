@@ -16,45 +16,22 @@ export default async function RefuelPage() {
     redirect("/login")
   }
 
-  // Get refuel records with related data
   const { data: refuelRecords, error } = await supabase
-    .from("refuel_records")
-    .select(`
-      *,
-      vehicle:vehicles(
-        id,
-        license_plate, 
-        make, 
-        model,
-        vehicle_number,
-        internal_number
-      ),
-      fuel_station:fuel_stations(
-        id,
-        name,
-        brand
-      ),
-      driver:drivers(
-        id,
-        name,
-        internal_number,
-        license_number
-      ),
-      created_by_user:users!refuel_records_created_by_fkey(name)
-    `)
+    .from("refuel_summary")
+    .select("*")
     .order("refuel_date", { ascending: false })
     .limit(50)
 
   const { data: vehicles } = await supabase
     .from("vehicles")
-    .select("id, license_plate, make, model, vehicle_number, internal_number")
+    .select("id, license_plate, internal_number")
     .eq("status", "active")
-    .order("vehicle_number")
+    .order("internal_number")
 
   const { data: drivers } = await supabase
     .from("drivers")
     .select("id, name, internal_number")
-    .eq("is_active", true)
+    .eq("status", "active")
     .order("name")
 
   if (error) {

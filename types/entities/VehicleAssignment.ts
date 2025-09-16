@@ -1,7 +1,7 @@
 export interface VehicleAssignment {
   id: string
   vehicle_id: string
-  driver_id: number // Integer to match drivers table
+  driver_id: string
   assigned_at: string
   assigned_by: string | null
   unassigned_at: string | null

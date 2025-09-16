@@ -4,7 +4,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import type { RefuelRecordInsert } from "@/types/database"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,18 +15,16 @@ import Link from "next/link"
 interface Vehicle {
   id: string
   license_plate: string
-  make: string
-  model: string
+  make_id: string | null
+  model_id: string | null
   current_mileage: number
   fuel_capacity: number | null
 }
 
 interface Driver {
   id: string
-  license_number: string
-  user?: {
-    name: string
-  } | null
+  name: string
+  internal_number: string
 }
 
 interface RefuelFormProps {
@@ -43,13 +40,15 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
     driver_id: refuelRecord?.driver_id || "",
     refuel_date: refuelRecord?.refuel_date?.split("T")[0] || new Date().toISOString().split("T")[0],
     refuel_time: refuelRecord?.refuel_date ? new Date(refuelRecord.refuel_date).toTimeString().slice(0, 5) : "12:00",
-    mileage: refuelRecord?.mileage || "",
+    odometer_reading: refuelRecord?.odometer_reading || "",
     liters: refuelRecord?.liters || "",
     cost_per_liter: refuelRecord?.cost_per_liter || "",
     total_cost: refuelRecord?.total_cost || "",
-    fuel_station: refuelRecord?.fuel_station || "",
+    fuel_station_id: refuelRecord?.fuel_station_id || "",
     receipt_number: refuelRecord?.receipt_number || "",
+    invoice_number: refuelRecord?.invoice_number || "",
     notes: refuelRecord?.notes || "",
+    is_full_tank: refuelRecord?.is_full_tank ?? true,
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,17 +61,17 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
       const vehicle = vehicles.find((v) => v.id === formData.vehicle_id)
       setSelectedVehicle(vehicle || null)
 
-      // Auto-fill mileage if not already set
-      if (vehicle && !formData.mileage) {
+      // Auto-fill odometer reading if not already set
+      if (vehicle && !formData.odometer_reading) {
         setFormData((prev) => ({
           ...prev,
-          mileage: vehicle.current_mileage.toString(),
+          odometer_reading: vehicle.current_mileage.toString(),
         }))
       }
     } else {
       setSelectedVehicle(null)
     }
-  }, [formData.vehicle_id, vehicles, formData.mileage])
+  }, [formData.vehicle_id, vehicles, formData.odometer_reading])
 
   // Calculate total cost when liters or cost per liter changes
   useEffect(() => {
@@ -86,18 +85,19 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
   }, [formData.liters, formData.cost_per_liter])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+    const { name, value, type } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }))
   }
 
   const validateForm = () => {
     if (
       !formData.vehicle_id ||
+      !formData.driver_id ||
       !formData.refuel_date ||
-      !formData.mileage ||
+      !formData.odometer_reading ||
       !formData.liters ||
       !formData.cost_per_liter
     ) {
@@ -115,13 +115,13 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
       return false
     }
 
-    if (Number(formData.mileage) < 0) {
+    if (Number(formData.odometer_reading) < 0) {
       setError("A quilometragem não pode ser negativa")
       return false
     }
 
-    // Check if mileage is reasonable compared to vehicle's current mileage
-    if (selectedVehicle && Number(formData.mileage) < selectedVehicle.current_mileage - 1000) {
+    // Check if odometer reading is reasonable compared to vehicle's current mileage
+    if (selectedVehicle && Number(formData.odometer_reading) < selectedVehicle.current_mileage - 1000) {
       setError("A quilometragem parece estar muito abaixo da quilometragem atual do veículo")
       return false
     }
@@ -145,17 +145,19 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
       // Combine date and time
       const refuelDateTime = new Date(`${formData.refuel_date}T${formData.refuel_time}:00`)
 
-      const refuelData: RefuelRecordInsert = {
+      const refuelData = {
         vehicle_id: formData.vehicle_id,
-        driver_id: formData.driver_id || null,
+        driver_id: formData.driver_id,
         refuel_date: refuelDateTime.toISOString(),
-        mileage: Number(formData.mileage),
+        odometer_reading: Number(formData.odometer_reading),
         liters: Number(formData.liters),
         cost_per_liter: Number(formData.cost_per_liter),
         total_cost: Number(formData.total_cost),
-        fuel_station: formData.fuel_station || null,
+        fuel_station_id: formData.fuel_station_id || null,
         receipt_number: formData.receipt_number || null,
+        invoice_number: formData.invoice_number || null,
         notes: formData.notes || null,
+        is_full_tank: formData.is_full_tank,
         created_by: currentUserId,
       }
 
@@ -173,10 +175,10 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
       }
 
       // Update vehicle mileage if this is a newer reading
-      if (selectedVehicle && Number(formData.mileage) > selectedVehicle.current_mileage) {
+      if (selectedVehicle && Number(formData.odometer_reading) > selectedVehicle.current_mileage) {
         await supabase
           .from("vehicles")
-          .update({ current_mileage: Number(formData.mileage) })
+          .update({ current_mileage: Number(formData.odometer_reading) })
           .eq("id", formData.vehicle_id)
       }
 
@@ -222,7 +224,7 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                   <option value="">Selecionar veículo</option>
                   {vehicles.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.license_plate} - {vehicle.make} {vehicle.model}
+                      {vehicle.license_plate}
                     </option>
                   ))}
                 </select>
@@ -236,18 +238,19 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
 
               {/* Driver */}
               <div className="grid gap-2">
-                <Label htmlFor="driver_id">Condutor</Label>
+                <Label htmlFor="driver_id">Condutor *</Label>
                 <select
                   id="driver_id"
                   name="driver_id"
+                  required
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={formData.driver_id}
                   onChange={handleInputChange}
                 >
-                  <option value="">Selecionar condutor (opcional)</option>
+                  <option value="">Selecionar condutor</option>
                   {drivers.map((driver) => (
                     <option key={driver.id} value={driver.id}>
-                      {driver.user?.name || driver.license_number}
+                      {driver.name} ({driver.internal_number})
                     </option>
                   ))}
                 </select>
@@ -278,17 +281,17 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                 />
               </div>
 
-              {/* Mileage */}
+              {/* Odometer Reading */}
               <div className="grid gap-2">
-                <Label htmlFor="mileage">Quilometragem *</Label>
+                <Label htmlFor="odometer_reading">Quilometragem *</Label>
                 <Input
-                  id="mileage"
-                  name="mileage"
+                  id="odometer_reading"
+                  name="odometer_reading"
                   type="number"
                   required
                   min="0"
                   placeholder="150000"
-                  value={formData.mileage}
+                  value={formData.odometer_reading}
                   onChange={handleInputChange}
                 />
               </div>
@@ -349,28 +352,43 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                 </p>
               </div>
 
-              {/* Fuel station */}
-              <div className="grid gap-2">
-                <Label htmlFor="fuel_station">Posto de Combustível</Label>
-                <Input
-                  id="fuel_station"
-                  name="fuel_station"
-                  placeholder="Galp, BP, Repsol, etc."
-                  value={formData.fuel_station}
-                  onChange={handleInputChange}
-                />
-              </div>
-
               {/* Receipt number */}
               <div className="grid gap-2">
                 <Label htmlFor="receipt_number">Número do Recibo</Label>
                 <Input
                   id="receipt_number"
                   name="receipt_number"
-                  placeholder="Número do recibo/fatura"
+                  placeholder="Número do recibo"
                   value={formData.receipt_number}
                   onChange={handleInputChange}
                 />
+              </div>
+
+              {/* Invoice number */}
+              <div className="grid gap-2">
+                <Label htmlFor="invoice_number">Número da Fatura</Label>
+                <Input
+                  id="invoice_number"
+                  name="invoice_number"
+                  placeholder="Número da fatura"
+                  value={formData.invoice_number}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              {/* Full tank checkbox */}
+              <div className="grid gap-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="is_full_tank"
+                    name="is_full_tank"
+                    type="checkbox"
+                    checked={formData.is_full_tank}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="is_full_tank">Depósito Cheio</Label>
+                </div>
               </div>
             </div>
 
