@@ -2,8 +2,6 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
-  console.log("[v0] updateSession called for:", request.nextUrl.pathname)
-
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -39,17 +37,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log("[v0] User authenticated:", !!user, "Path:", request.nextUrl.pathname)
-
   // Only redirect dashboard routes when user is not authenticated
   if (!user && request.nextUrl.pathname.startsWith("/dashboard") && !request.nextUrl.pathname.startsWith("/login")) {
-    console.log("[v0] Redirecting unauthenticated user to /login")
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 
-  console.log("[v0] Middleware completed successfully")
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   return supabaseResponse
 }
