@@ -13,13 +13,11 @@ export async function GET(request: NextRequest) {
       dateTo: searchParams.get("date_to") || undefined,
     }
 
-    console.log("[v0] Fetching analytics with filters:", filters)
     const analytics = await db.getFleetAnalytics(filters)
-    console.log("[v0] Analytics result:", analytics)
 
     return NextResponse.json({ analytics })
   } catch (error) {
-    console.error("[v0] Error fetching analytics:", error)
+    console.error("Error fetching analytics:", error)
     return NextResponse.json({ error: "Failed to fetch analytics", details: error.message }, { status: 500 })
   }
 }

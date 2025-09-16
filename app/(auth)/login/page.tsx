@@ -12,8 +12,6 @@ import { authService, type LoginCredentials } from "@/lib/auth"
 import { createBrowserClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
-  console.log("[v0] Login page component loaded")
-
   const router = useRouter()
   const [formData, setFormData] = useState<LoginCredentials>({
     email: "",
@@ -33,12 +31,11 @@ export default function LoginPage() {
         } = await supabase.auth.getUser()
 
         if (user) {
-          console.log("[v0] User already authenticated, redirecting to dashboard")
           router.replace("/dashboard")
           return
         }
       } catch (error) {
-        console.error("[v0] Auth check error:", error)
+        console.error("Auth check error:", error)
       } finally {
         setCheckingAuth(false)
       }
@@ -53,13 +50,11 @@ export default function LoginPage() {
       ...prev,
       [name]: value,
     }))
-    // Clear error when user starts typing
     if (error) setError(null)
   }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log("[v0] Login form submitted")
 
     setLoading(true)
     setError(null)
@@ -68,14 +63,12 @@ export default function LoginPage() {
       const result = await authService.signIn(formData)
 
       if (result.success && result.data) {
-        console.log("[v0] Login successful, redirecting to dashboard")
         window.location.href = "/dashboard"
       } else {
-        console.log("[v0] Login failed:", result.error?.message)
         setError(result.error?.message || "Erro no login")
       }
     } catch (err) {
-      console.error("[v0] Login error:", err)
+      console.error("Login error:", err)
       setError("Erro inesperado. Tente novamente.")
     } finally {
       setLoading(false)
