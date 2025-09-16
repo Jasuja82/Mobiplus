@@ -20,6 +20,7 @@ interface User {
   department_name?: string
   is_active: boolean
   created_at: string
+  department_id: string
 }
 
 export function UserManagement() {
@@ -76,7 +77,8 @@ export function UserManagement() {
           role,
           is_active,
           created_at,
-          departments!inner(name)
+          department_id,
+          departments:department_id(name)
         `)
         .order("created_at", { ascending: false })
 
