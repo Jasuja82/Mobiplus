@@ -15,7 +15,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       },
     })
 
-    const { error: profileError } = await supabase.from("employees").delete().eq("id", params.id)
+    const { error: profileError } = await supabase.from("profiles").delete().eq("id", params.id)
 
     if (profileError) {
       return NextResponse.json({ error: profileError.message }, { status: 400 })

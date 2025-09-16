@@ -37,9 +37,10 @@ export type AssignmentRow = Tables<"assignments">
 export type AssignmentInsert = TablesInsert<"assignments">
 export type AssignmentUpdate = TablesUpdate<"assignments">
 
-export type EmployeeRow = Tables<"employees">
-export type EmployeeInsert = TablesInsert<"employees">
-export type EmployeeUpdate = TablesUpdate<"employees">
+// Profile type aliases for the new profiles table
+export type ProfileRow = Tables<"profiles">
+export type ProfileInsert = TablesInsert<"profiles">
+export type ProfileUpdate = TablesUpdate<"profiles">
 
 export type FuelPricePerMonthRow = Tables<"fuel_price_per_month">
 export type FuelPricePerMonthInsert = TablesInsert<"fuel_price_per_month">

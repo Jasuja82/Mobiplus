@@ -16,7 +16,7 @@ export async function GET() {
     })
 
     const { data: users, error } = await supabase
-      .from("employees")
+      .from("user_profiles")
       .select(`
         id,
         email,
@@ -24,7 +24,7 @@ export async function GET() {
         role,
         is_active,
         created_at,
-        departments!inner(name)
+        department_name
       `)
       .order("created_at", { ascending: false })
 
@@ -57,6 +57,9 @@ export async function POST(request: Request) {
       email,
       password: Math.random().toString(36).slice(-8), // Temporary password
       email_confirm: true,
+      user_metadata: {
+        full_name,
+      },
     })
 
     if (authError) {
@@ -64,10 +67,9 @@ export async function POST(request: Request) {
     }
 
     const { data: user, error: profileError } = await supabase
-      .from("employees")
+      .from("profiles")
       .insert({
         id: authUser.user.id,
-        email,
         full_name,
         role,
         department_id,

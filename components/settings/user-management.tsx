@@ -69,7 +69,7 @@ export function UserManagement() {
       )
 
       const { data, error } = await supabase
-        .from("employees")
+        .from("user_profiles")
         .select(`
           id,
           email,
@@ -78,7 +78,7 @@ export function UserManagement() {
           is_active,
           created_at,
           department_id,
-          departments:department_id(name)
+          department_name
         `)
         .order("created_at", { ascending: false })
 
@@ -87,12 +87,7 @@ export function UserManagement() {
         return
       }
 
-      const transformedUsers = (data || []).map((user) => ({
-        ...user,
-        department_name: user.departments?.name || "Unknown",
-      }))
-
-      setUsers(transformedUsers)
+      setUsers(data || [])
     } catch (error) {
       console.error("Error fetching users:", error)
     } finally {

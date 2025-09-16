@@ -313,27 +313,6 @@ export class DatabaseService {
     return data as Assignment
   }
 
-  // Employees
-  async getEmployees(departmentId?: string) {
-    let query = this.supabase.from("employees").select("*").eq("status", "active")
-
-    if (departmentId) {
-      query = query.eq("department_id", departmentId)
-    }
-
-    const { data, error } = await query.order("name")
-
-    if (error) throw error
-    return data as Employee[]
-  }
-
-  async createEmployee(employee: Omit<Employee, "id" | "created_at" | "updated_at">) {
-    const { data, error } = await this.supabase.from("employees").insert(employee).select().single()
-
-    if (error) throw error
-    return data as Employee
-  }
-
   // Reference data
   async getMakes() {
     const { data, error } = await this.supabase.from("makes").select("*").order("name")
