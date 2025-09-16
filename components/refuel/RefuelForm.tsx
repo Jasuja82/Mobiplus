@@ -91,6 +91,7 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
   useEffect(() => {
     const loadEntities = async () => {
       try {
+        console.log("[v0] Loading entities from Supabase")
         const supabase = createClient()
 
         // Load locations, assignment types, and fuel stations in parallel
@@ -99,6 +100,12 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
           supabase.from("assignment_types").select("id, name, description, color").eq("is_active", true).order("name"),
           supabase.from("fuel_stations").select("id, name, brand, address").eq("is_active", true).order("name"),
         ])
+
+        console.log("[v0] Entities loaded", {
+          locations: locationsRes.data?.length || 0,
+          assignmentTypes: assignmentTypesRes.data?.length || 0,
+          fuelStations: fuelStationsRes.data?.length || 0,
+        })
 
         if (locationsRes.data) setLocations(locationsRes.data)
         if (assignmentTypesRes.data) setAssignmentTypes(assignmentTypesRes.data)
@@ -228,6 +235,8 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
     setLoading(true)
     setError(null)
 
+    console.log("[v0] Form submission started", { formData })
+
     if (!validateForm()) {
       setLoading(false)
       return
@@ -257,6 +266,8 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
         created_by: currentUserId,
       }
 
+      console.log("[v0] Saving refuel data", refuelData)
+
       let result
       if (refuelRecord) {
         // Update existing record
@@ -278,7 +289,7 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
           .eq("id", formData.vehicle_id)
       }
 
-      console.log("✅ Refuel record saved successfully")
+      console.log("[v0] Refuel record saved successfully")
       router.push("/refuel")
     } catch (err) {
       console.error("Error saving refuel record:", err)
@@ -473,6 +484,7 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                 </div>
               </div>
 
+              {/* Location */}
               <div className="grid gap-2">
                 <Label htmlFor="location_id">Localização *</Label>
                 <select
@@ -493,6 +505,7 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                 </select>
               </div>
 
+              {/* Assignment Type */}
               <div className="grid gap-2">
                 <Label htmlFor="assignment_type_id">Atribuição</Label>
                 <select
