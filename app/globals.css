@@ -1,8 +1,5 @@
 @import "tailwindcss";
-@plugin "daisyui";
-@plugin "flyonui";
 @import "tw-animate-css";
-@import "./node_modules/flyonui/variants.css";
 
 @custom-variant dark (&:is(.dark *));
 
