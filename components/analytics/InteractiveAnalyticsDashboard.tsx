@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AnalyticsFilters, type AnalyticsFilters as FiltersType } from "./AnalyticsFilters"
@@ -8,6 +8,8 @@ import { InteractiveFuelAnalytics } from "./InteractiveFuelAnalytics"
 import { InteractiveMaintenanceAnalytics } from "./InteractiveMaintenanceAnalytics"
 import { InteractiveFleetMetrics } from "./InteractiveFleetMetrics"
 import { Loader2 } from "lucide-react"
+import { useDebounce } from "@/lib/hooks/use-debounce"
+import { useDataCache } from "@/lib/hooks/use-data-cache"
 
 interface DashboardData {
   locations: Array<{ id: string; name: string }>
@@ -27,34 +29,55 @@ export function InteractiveAnalyticsDashboard() {
     vehicle: "all",
   })
 
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const debouncedFilters = useDebounce(filters, 500)
 
-  useEffect(() => {
-    fetchData()
-  }, [filters])
+  const cacheKey = useMemo(() => {
+    const params = new URLSearchParams({
+      timePeriod: debouncedFilters.timePeriod,
+      assignment: debouncedFilters.assignment,
+      location: debouncedFilters.location,
+      department: debouncedFilters.department,
+      vehicle: debouncedFilters.vehicle,
+      ...(debouncedFilters.dateRange?.from && { startDate: debouncedFilters.dateRange.from.toISOString() }),
+      ...(debouncedFilters.dateRange?.to && { endDate: debouncedFilters.dateRange.to.toISOString() }),
+    })
+    return `analytics-dashboard-${params.toString()}`
+  }, [debouncedFilters])
 
-  const fetchData = async () => {
-    setIsLoading(true)
-    try {
+  const { data, isLoading, error } = useDataCache<DashboardData>(
+    cacheKey,
+    async () => {
       const queryParams = new URLSearchParams({
-        timePeriod: filters.timePeriod,
-        assignment: filters.assignment,
-        location: filters.location,
-        department: filters.department,
-        vehicle: filters.vehicle,
-        ...(filters.dateRange?.from && { startDate: filters.dateRange.from.toISOString() }),
-        ...(filters.dateRange?.to && { endDate: filters.dateRange.to.toISOString() }),
+        timePeriod: debouncedFilters.timePeriod,
+        assignment: debouncedFilters.assignment,
+        location: debouncedFilters.location,
+        department: debouncedFilters.department,
+        vehicle: debouncedFilters.vehicle,
+        ...(debouncedFilters.dateRange?.from && { startDate: debouncedFilters.dateRange.from.toISOString() }),
+        ...(debouncedFilters.dateRange?.to && { endDate: debouncedFilters.dateRange.to.toISOString() }),
       })
 
       const response = await fetch(`/api/analytics/dashboard?${queryParams}`)
-      const result = await response.json()
-      setData(result)
-    } catch (error) {
-      console.error("Error fetching analytics data:", error)
-    } finally {
-      setIsLoading(false)
-    }
+      if (!response.ok) {
+        throw new Error("Failed to fetch analytics data")
+      }
+      return response.json()
+    },
+    {
+      staleTime: 2 * 60 * 1000, // 2 minutes
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+    },
+  )
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500">Error loading analytics data</p>
+          <p className="text-sm text-muted-foreground">{error.message}</p>
+        </div>
+      </div>
+    )
   }
 
   if (!data) {

@@ -1,13 +1,28 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, TrendingDown, Car, Fuel, Wrench, Euro, Activity } from "lucide-react"
-import { createFleetSignals } from "@/lib/signals"
+
+interface MetricsState {
+  totalVehicles: number
+  activeVehicles: number
+  maintenanceVehicles: number
+  avgFuelEfficiency: number
+  pendingMaintenance: number
+  monthlyFuelCost: number
+  monthlyMaintenanceCost: number
+}
+
+interface TrendsState {
+  fuelEfficiencyTrend: number
+  costTrend: number
+  maintenanceTrend: number
+}
 
 export function RealTimeMetrics() {
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<MetricsState>({
     totalVehicles: 0,
     activeVehicles: 0,
     maintenanceVehicles: 0,
@@ -17,57 +32,49 @@ export function RealTimeMetrics() {
     monthlyMaintenanceCost: 0,
   })
 
-  const [trends, setTrends] = useState({
+  const [trends, setTrends] = useState<TrendsState>({
     fuelEfficiencyTrend: 0,
     costTrend: 0,
     maintenanceTrend: 0,
   })
 
-  useEffect(() => {
-    const signals = createFleetSignals()
+  const fetchMetrics = useCallback(async () => {
+    try {
+      const response = await fetch("/api/metrics/real-time")
+      if (!response.ok) throw new Error("Failed to fetch metrics")
 
-    // Subscribe to all signals
-    const unsubscribers = [
-      signals.totalVehicles.subscribe((value) => setMetrics((prev) => ({ ...prev, totalVehicles: value }))),
-      signals.activeVehicles.subscribe((value) => setMetrics((prev) => ({ ...prev, activeVehicles: value }))),
-      signals.maintenanceVehicles.subscribe((value) => setMetrics((prev) => ({ ...prev, maintenanceVehicles: value }))),
-      signals.avgFuelEfficiency.subscribe((value) => setMetrics((prev) => ({ ...prev, avgFuelEfficiency: value }))),
-      signals.pendingMaintenance.subscribe((value) => setMetrics((prev) => ({ ...prev, pendingMaintenance: value }))),
-      signals.monthlyFuelCost.subscribe((value) => setMetrics((prev) => ({ ...prev, monthlyFuelCost: value }))),
-      signals.monthlyMaintenanceCost.subscribe((value) =>
-        setMetrics((prev) => ({ ...prev, monthlyMaintenanceCost: value })),
-      ),
-    ]
-
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      signals.totalVehicles.set(25 + Math.floor(Math.random() * 5))
-      signals.activeVehicles.set(20 + Math.floor(Math.random() * 5))
-      signals.maintenanceVehicles.set(Math.floor(Math.random() * 3))
-      signals.monthlyFuelCost.set(8500 + Math.floor(Math.random() * 1000))
-      signals.monthlyMaintenanceCost.set(2300 + Math.floor(Math.random() * 500))
-
-      // Update trends
-      setTrends({
-        fuelEfficiencyTrend: (Math.random() - 0.5) * 10,
-        costTrend: (Math.random() - 0.5) * 15,
-        maintenanceTrend: (Math.random() - 0.5) * 20,
-      })
-    }, 3000)
-
-    return () => {
-      unsubscribers.forEach((unsub) => unsub())
-      clearInterval(interval)
+      const data = await response.json()
+      setMetrics(data.metrics)
+      setTrends(data.trends)
+    } catch (error) {
+      console.error("Error fetching real-time metrics:", error)
     }
   }, [])
 
-  const getTrendIcon = (trend: number) => {
+  useEffect(() => {
+    // Initial fetch
+    fetchMetrics()
+
+    const interval = setInterval(fetchMetrics, 30000) // 30 seconds instead of 3
+
+    return () => clearInterval(interval)
+  }, [fetchMetrics])
+
+  const vehicleUtilization = useMemo(
+    () => (metrics.totalVehicles > 0 ? (metrics.activeVehicles / metrics.totalVehicles) * 100 : 0),
+    [metrics.totalVehicles, metrics.activeVehicles],
+  )
+
+  const getTrendIcon = useCallback((trend: number) => {
     if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-500" />
     if (trend < 0) return <TrendingDown className="h-4 w-4 text-red-500" />
     return <Activity className="h-4 w-4 text-gray-500" />
-  }
+  }, [])
 
-  const vehicleUtilization = metrics.totalVehicles > 0 ? (metrics.activeVehicles / metrics.totalVehicles) * 100 : 0
+  const totalMonthlyCost = useMemo(
+    () => metrics.monthlyFuelCost + metrics.monthlyMaintenanceCost,
+    [metrics.monthlyFuelCost, metrics.monthlyMaintenanceCost],
+  )
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -121,9 +128,7 @@ export function RealTimeMetrics() {
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="text-2xl font-bold">
-                €{(metrics.monthlyFuelCost + metrics.monthlyMaintenanceCost).toLocaleString()}
-              </div>
+              <div className="text-2xl font-bold">€{totalMonthlyCost.toLocaleString()}</div>
               {getTrendIcon(trends.costTrend)}
             </div>
             <div className="space-y-1 text-xs text-muted-foreground">
