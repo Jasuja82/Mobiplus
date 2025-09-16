@@ -318,47 +318,76 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
 
               {/* Odometer Reading */}
               <div className="grid gap-2">
-                <Label htmlFor="odometer_reading">Quilometragem *</Label>
+                <Label htmlFor="odometer_reading">Odómetro *</Label>
+                {odometerValidation?.lastKnownReading && (
+                  <div className="flex items-center gap-2 text-sm text-blue-600">
+                    <span className="inline-flex items-center">
+                      ℹ️ Último valor: {odometerValidation.lastKnownReading.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <Input
                   id="odometer_reading"
                   name="odometer_reading"
                   type="number"
                   required
                   min="0"
-                  placeholder="150000"
+                  placeholder="644240"
                   value={formData.odometer_reading}
                   onChange={handleInputChange}
+                  className={
+                    odometerValidation && !odometerValidation.isValid ? "border-red-500 focus-visible:ring-red-500" : ""
+                  }
                 />
-                {isValidatingOdometer && <p className="text-xs text-blue-600">🔍 Validando quilometragem...</p>}
-                {odometerValidation && (
+                {odometerValidation?.lastKnownReading && formData.odometer_reading && (
+                  <div className="space-y-1">
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Diferença no conta-quilómetros</span>
+                    </div>
+                    <div
+                      className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${
+                        Number(formData.odometer_reading) - odometerValidation.lastKnownReading < 0
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {(Number(formData.odometer_reading) - odometerValidation.lastKnownReading).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {Number(formData.odometer_reading).toLocaleString()} -{" "}
+                      {odometerValidation.lastKnownReading.toLocaleString()} ={" "}
+                      {(Number(formData.odometer_reading) - odometerValidation.lastKnownReading).toLocaleString()}
+                    </div>
+                  </div>
+                )}
+                {isValidatingOdometer && <p className="text-xs text-blue-600">🔍 A validar quilometragem...</p>}
+                {odometerValidation && !odometerValidation.isValid && (
                   <div className="space-y-1">
                     {odometerValidation.errors.map((error, i) => (
-                      <p key={i} className="text-xs text-red-600">
-                        ❌ {error}
+                      <p key={i} className="text-sm text-red-600 font-medium">
+                        {error.includes("lower than") || error.includes("menor")
+                          ? `Deve ser superior a ${odometerValidation.lastKnownReading?.toLocaleString()}`
+                          : error}
                       </p>
                     ))}
+                  </div>
+                )}
+                {odometerValidation && odometerValidation.isValid && odometerValidation.warnings.length > 0 && (
+                  <div className="space-y-1">
                     {odometerValidation.warnings.map((warning, i) => (
                       <p key={i} className="text-xs text-yellow-600">
                         ⚠️ {warning}
                       </p>
                     ))}
+                  </div>
+                )}
+                {odometerValidation && odometerValidation.suggestions.length > 0 && (
+                  <div className="space-y-1">
                     {odometerValidation.suggestions.map((suggestion, i) => (
                       <p key={i} className="text-xs text-green-600">
                         💡 {suggestion}
                       </p>
                     ))}
-                    {odometerValidation.lastKnownReading && (
-                      <p className="text-xs text-gray-600">
-                        📊 Último registo: {odometerValidation.lastKnownReading.toLocaleString()} km
-                        {odometerValidation.lastRefuelDate &&
-                          ` (${new Date(odometerValidation.lastRefuelDate).toLocaleDateString()})`}
-                      </p>
-                    )}
-                    {odometerValidation.estimatedReading && (
-                      <p className="text-xs text-blue-600">
-                        🎯 Estimativa baseada no histórico: {odometerValidation.estimatedReading.toLocaleString()} km
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
