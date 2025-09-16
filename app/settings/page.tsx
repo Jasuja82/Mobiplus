@@ -10,7 +10,8 @@ export default async function SettingsPage() {
 
   let initialUser = null
   if (authUser) {
-    const { data: profile } = await supabase.from("users").select("*").eq("id", authUser.id).single()
+    const { data: profile } = await supabase.from("employees").select("*").eq("id", authUser.id).single()
+
     if (profile) {
       initialUser = {
         id: authUser.id,

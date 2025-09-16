@@ -15,7 +15,18 @@ export async function GET() {
       },
     })
 
-    const { data: users, error } = await supabase.from("users").select("*").order("created_at", { ascending: false })
+    const { data: users, error } = await supabase
+      .from("employees")
+      .select(`
+        id,
+        email,
+        full_name,
+        role,
+        is_active,
+        created_at,
+        departments!inner(name)
+      `)
+      .order("created_at", { ascending: false })
 
     if (error) {
       return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
@@ -30,7 +41,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, name, role, department } = body
+    const { email, full_name, role, department_id } = body
 
     const cookieStore = cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -52,16 +63,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
-    // Create user profile
     const { data: user, error: profileError } = await supabase
-      .from("users")
+      .from("employees")
       .insert({
         id: authUser.user.id,
         email,
-        name,
+        full_name,
         role,
-        department,
-        status: "active",
+        department_id,
+        is_active: true,
       })
       .select()
       .single()

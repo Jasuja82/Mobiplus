@@ -17,14 +17,14 @@ interface User {
   email: string
   full_name: string
   role: string
-  department_id: string
-  department?: { name: string }
+  department_name?: string
   is_active: boolean
   created_at: string
 }
 
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
+  const [departments, setDepartments] = useState<any[]>([])
   const [showAddUser, setShowAddUser] = useState(false)
   const [loading, setLoading] = useState(true)
   const [newUser, setNewUser] = useState({
@@ -36,7 +36,28 @@ export function UserManagement() {
 
   useEffect(() => {
     fetchUsers()
+    fetchDepartments()
   }, [])
+
+  const fetchDepartments = async () => {
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      )
+
+      const { data, error } = await supabase.from("departments").select("id, name").order("name")
+
+      if (error) {
+        console.error("Error fetching departments:", error)
+        return
+      }
+
+      setDepartments(data || [])
+    } catch (error) {
+      console.error("Error fetching departments:", error)
+    }
+  }
 
   const fetchUsers = async () => {
     try {
@@ -53,10 +74,9 @@ export function UserManagement() {
           email,
           full_name,
           role,
-          department_id,
-          department:departments(name),
           is_active,
-          created_at
+          created_at,
+          departments!inner(name)
         `)
         .order("created_at", { ascending: false })
 
@@ -65,7 +85,12 @@ export function UserManagement() {
         return
       }
 
-      setUsers(data || [])
+      const transformedUsers = (data || []).map((user) => ({
+        ...user,
+        department_name: user.departments?.name || "Unknown",
+      }))
+
+      setUsers(transformedUsers)
     } catch (error) {
       console.error("Error fetching users:", error)
     } finally {
@@ -177,7 +202,7 @@ export function UserManagement() {
                     <TableCell>
                       <Badge variant={getRoleBadgeVariant(user.role) as any}>{user.role}</Badge>
                     </TableCell>
-                    <TableCell>{user.department?.name || "N/A"}</TableCell>
+                    <TableCell>{user.department_name}</TableCell>
                     <TableCell>
                       <Badge variant={user.is_active ? "default" : "secondary"}>
                         {user.is_active ? "active" : "inactive"}
@@ -276,10 +301,11 @@ export function UserManagement() {
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dept1">Transport</SelectItem>
-                    <SelectItem value="dept2">Maintenance</SelectItem>
-                    <SelectItem value="dept3">Administration</SelectItem>
-                    <SelectItem value="dept4">IT</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
