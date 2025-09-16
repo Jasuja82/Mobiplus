@@ -315,21 +315,6 @@ export class DatabaseService {
     return data as Assignment
   }
 
-  // Assignment Types (reference data for types of assignments)
-  async getAssignmentTypes() {
-    const { data, error } = await this.supabase.from("assignment_types").select("*").eq("is_active", true).order("name")
-
-    if (error) throw error
-    return data
-  }
-
-  async createAssignmentType(assignmentType: { name: string; description?: string; color?: string }) {
-    const { data, error } = await this.supabase.from("assignment_types").insert(assignmentType).select().single()
-
-    if (error) throw error
-    return data
-  }
-
   // Reference data
   async getMakes() {
     const { data, error } = await this.supabase.from("makes").select("*").order("name")

@@ -49,11 +49,8 @@ export async function GET(request: NextRequest) {
       .select("id, license_plate, internal_number")
       .neq("status", "retired")
 
-    // Fetch assignment types
-    const { data: assignments } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
-
-    // Fetch assignment types (for filtering)
-    const { data: assignmentTypes } = await supabase.from("assignment_types").select("id, name").eq("is_active", true)
+    // Fetch assignments (real assignments, not types)
+    const { data: assignments } = await supabase.from("assignments").select("id, name").eq("is_active", true)
 
     const { data: maintenanceData } = await supabase
       .from("maintenance_interventions")
@@ -179,7 +176,6 @@ export async function GET(request: NextRequest) {
       departments: departments || [],
       vehicles: vehicles || [],
       assignments: assignments || [],
-      assignmentTypes: assignmentTypes || [],
       totalCost,
       totalInterventions,
       averageCost,

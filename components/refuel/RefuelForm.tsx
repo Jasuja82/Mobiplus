@@ -82,7 +82,6 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
   const [isValidatingOdometer, setIsValidatingOdometer] = useState(false)
 
   const [locations, setLocations] = useState<Location[]>([])
-  const [assignmentTypes, setAssignmentTypes] = useState<AssignmentType[]>([])
   const [fuelStations, setFuelStations] = useState<FuelStation[]>([])
   const [entitiesLoading, setEntitiesLoading] = useState(true)
 
@@ -94,25 +93,21 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
         console.log("[v0] Loading entities from Supabase")
         const supabase = createClient()
 
-        // Load locations, assignment types, and fuel stations in parallel
-        const [locationsRes, assignmentTypesRes, fuelStationsRes] = await Promise.all([
+        // Load locations and fuel stations in parallel
+        const [locationsRes, fuelStationsRes] = await Promise.all([
           supabase.from("locations").select("id, name, city, region").eq("is_active", true).order("name"),
-          supabase.from("assignment_types").select("id, name, description, color").eq("is_active", true).order("name"),
           supabase.from("fuel_stations").select("id, name, brand, address").eq("is_active", true).order("name"),
         ])
 
         console.log("[v0] Entities loaded", {
           locations: locationsRes.data?.length || 0,
-          assignmentTypes: assignmentTypesRes.data?.length || 0,
           fuelStations: fuelStationsRes.data?.length || 0,
         })
 
         if (locationsRes.data) setLocations(locationsRes.data)
-        if (assignmentTypesRes.data) setAssignmentTypes(assignmentTypesRes.data)
         if (fuelStationsRes.data) setFuelStations(fuelStationsRes.data)
 
         if (locationsRes.error) console.error("Error loading locations:", locationsRes.error)
-        if (assignmentTypesRes.error) console.error("Error loading assignment types:", assignmentTypesRes.error)
         if (fuelStationsRes.error) console.error("Error loading fuel stations:", fuelStationsRes.error)
       } catch (error) {
         console.error("Error loading entities:", error)
@@ -500,26 +495,6 @@ export function RefuelForm({ vehicles, drivers, currentUserId, refuelRecord }: R
                   {locations.map((location) => (
                     <option key={location.id} value={location.id}>
                       {location.name} - {location.city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Assignment Type */}
-              <div className="grid gap-2">
-                <Label htmlFor="assignment_type_id">Atribuição</Label>
-                <select
-                  id="assignment_type_id"
-                  name="assignment_type_id"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  value={formData.assignment_type_id}
-                  onChange={handleInputChange}
-                  disabled={entitiesLoading}
-                >
-                  <option value="">Selecionar atribuição</option>
-                  {assignmentTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
                     </option>
                   ))}
                 </select>
