@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 import { AuthProvider } from "@/hooks/use-auth"
 import { Suspense } from "react"
+import PrelineScript from "@/components/PrelineScript"
 
 export const metadata: Metadata = {
   title: "MobiAzores Fleet Management",
@@ -29,6 +30,8 @@ export default function RootLayout({
           </SettingsProvider>
         </AuthProvider>
         <Analytics />
+        <PrelineScript />
+        <script src="./node_modules/flyonui/dist/flyonui.js" async></script>
       </body>
     </html>
   )
