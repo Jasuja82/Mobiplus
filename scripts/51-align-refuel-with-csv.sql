@@ -49,41 +49,42 @@ INSERT INTO refuel_records_new (
     updated
 )
 SELECT 
-    id,
-    vehicle_id as viatura,
-    driver_id as driver,
-    refuel_date::date as data,
-    odometer_reading::text as odometer,
-    liters,
-    cost_per_liter as literCost,
-    total_cost as calculatedTotalLiterCost,
-    notes,
-    created_at as created,
-    updated_at as updated
-FROM refuel_records
-WHERE vehicle_id IS NOT NULL AND driver_id IS NOT NULL;
+    r.id,
+    r.vehicle_id as viatura,
+    r.driver_id as driver,
+    r.refuel_date::date as data,
+    r.odometer_reading::text as odometer,
+    r.liters,
+    r.cost_per_liter as literCost,
+    r.total_cost as calculatedTotalLiterCost,
+    r.notes,
+    r.created_at as created,
+    r.updated_at as updated
+FROM refuel_records r
+WHERE r.vehicle_id IS NOT NULL AND r.driver_id IS NOT NULL;
 
 -- Drop the old table and rename the new one
 DROP TABLE IF EXISTS refuel_records CASCADE;
 ALTER TABLE refuel_records_new RENAME TO refuel_records;
 
+-- Fixed ambiguous column references by properly qualifying all column names with table aliases
 -- Create a view that provides both old and new column names for backward compatibility
 CREATE OR REPLACE VIEW refuel_analytics AS
 SELECT 
-    id,
-    viatura as vehicle_id,
-    driver as driver_id,
-    afectacao as assignment_id,
-    local as location_id,
-    data as refuel_date,
-    odometer::integer as odometer_reading,
-    liters,
-    literCost as cost_per_liter,
-    calculatedTotalLiterCost as total_cost,
-    calculatedOdometerDifference::integer as odometer_difference,
-    notes,
-    created as created_at,
-    updated as updated_at,
+    r.id,
+    r.viatura as vehicle_id,
+    r.driver as driver_id,
+    r.afectacao as assignment_id,
+    r.local as location_id,
+    r.data as refuel_date,
+    r.odometer::integer as odometer_reading,
+    r.liters,
+    r.literCost as cost_per_liter,
+    r.calculatedTotalLiterCost as total_cost,
+    r.calculatedOdometerDifference::integer as odometer_difference,
+    r.notes,
+    r.created as created_at,
+    r.updated as updated_at,
     -- Join with related tables for display
     v.license_plate,
     v.vehicle_number,
