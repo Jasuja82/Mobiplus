@@ -10,8 +10,6 @@ DECLARE
     prev_date DATE;
     fixed_count INTEGER := 0;
 BEGIN
-    RAISE NOTICE 'Starting odometer sanitization...';
-    
     -- Process each vehicle separately
     FOR vehicle_record IN 
         SELECT DISTINCT vehicle_id FROM refuel_records 
@@ -55,8 +53,6 @@ BEGIN
             prev_date := refuel_record.refuel_date::DATE;
         END LOOP;
     END LOOP;
-    
-    RAISE NOTICE 'Fixed % odometer difference records', fixed_count;
 END $$;
 
 -- 2. Update vehicle current mileage to latest odometer reading
@@ -238,6 +234,3 @@ WHERE r.odometer_difference < 0
    OR r.cost_per_liter > 2.5
 ORDER BY r.refuel_date DESC
 LIMIT 20;
-
-RAISE NOTICE 'Database sanitization completed successfully!';
-RAISE NOTICE 'Check the data_quality_report view for detailed statistics.';
