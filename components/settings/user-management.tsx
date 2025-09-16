@@ -15,9 +15,10 @@ import { createBrowserClient } from "@supabase/ssr"
 interface User {
   id: string
   email: string
-  name: string
+  full_name: string
   role: string
-  department: string
+  department_id: string
+  department?: { name: string }
   is_active: boolean
   created_at: string
 }
@@ -28,9 +29,9 @@ export function UserManagement() {
   const [loading, setLoading] = useState(true)
   const [newUser, setNewUser] = useState({
     email: "",
-    name: "",
+    full_name: "",
     role: "",
-    department: "",
+    department_id: "",
   })
 
   useEffect(() => {
@@ -46,13 +47,14 @@ export function UserManagement() {
       )
 
       const { data, error } = await supabase
-        .from("users")
+        .from("employees")
         .select(`
           id,
           email,
-          name,
+          full_name,
           role,
-          department,
+          department_id,
+          department:departments(name),
           is_active,
           created_at
         `)
@@ -82,7 +84,7 @@ export function UserManagement() {
       if (response.ok) {
         fetchUsers()
         setShowAddUser(false)
-        setNewUser({ email: "", name: "", role: "", department: "" })
+        setNewUser({ email: "", full_name: "", role: "", department_id: "" })
       }
     } catch (error) {
       console.error("Error creating user:", error)
@@ -170,12 +172,12 @@ export function UserManagement() {
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell className="font-medium">{user.full_name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={getRoleBadgeVariant(user.role) as any}>{user.role}</Badge>
                     </TableCell>
-                    <TableCell>{user.department}</TableCell>
+                    <TableCell>{user.department?.name || "N/A"}</TableCell>
                     <TableCell>
                       <Badge variant={user.is_active ? "default" : "secondary"}>
                         {user.is_active ? "active" : "inactive"}
@@ -226,8 +228,8 @@ export function UserManagement() {
                 <Label htmlFor="user-name">Full Name</Label>
                 <Input
                   id="user-name"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser((prev) => ({ ...prev, name: e.target.value }))}
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser((prev) => ({ ...prev, full_name: e.target.value }))}
                   placeholder="John Doe"
                 />
               </div>
@@ -267,17 +269,17 @@ export function UserManagement() {
               <div className="space-y-2">
                 <Label htmlFor="user-department">Department</Label>
                 <Select
-                  value={newUser.department}
-                  onValueChange={(value) => setNewUser((prev) => ({ ...prev, department: value }))}
+                  value={newUser.department_id}
+                  onValueChange={(value) => setNewUser((prev) => ({ ...prev, department_id: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Transport">Transport</SelectItem>
-                    <SelectItem value="Maintenance">Maintenance</SelectItem>
-                    <SelectItem value="Administration">Administration</SelectItem>
-                    <SelectItem value="IT">IT</SelectItem>
+                    <SelectItem value="dept1">Transport</SelectItem>
+                    <SelectItem value="dept2">Maintenance</SelectItem>
+                    <SelectItem value="dept3">Administration</SelectItem>
+                    <SelectItem value="dept4">IT</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -16,14 +16,13 @@ export default async function VehiclesPage() {
   }
 
   const { data: vehicles, error } = await supabase
-    .from("vehicles_with_age")
+    .from("vehicle_summary")
     .select(`
       *,
-      category:vehicle_categories(name),
       department:departments(name),
       latest_refuel:refuel_records(odometer_reading, refuel_date)
     `)
-    .order("vehicle_number")
+    .order("license_plate")
 
   if (error) {
     console.error("Error fetching vehicles:", error)
@@ -33,7 +32,7 @@ export default async function VehiclesPage() {
     "[v0] Vehicle make/model data:",
     vehicles?.map((v) => ({
       id: v.id,
-      internal_number: v.internal_number,
+      license_plate: v.license_plate,
       make: v.make,
       model: v.model,
       make_type: typeof v.make,
@@ -47,9 +46,13 @@ export default async function VehiclesPage() {
       const latestRefuel = vehicle.latest_refuel?.[0]
       const latestOdometer = latestRefuel?.odometer_reading || vehicle.current_mileage || 0
 
+      const currentYear = new Date().getFullYear()
+      const vehicleAge = vehicle.year ? currentYear - vehicle.year : 0
+
       return {
         ...vehicle,
         latest_odometer: latestOdometer,
+        age: vehicleAge,
       }
     }) || []
 
