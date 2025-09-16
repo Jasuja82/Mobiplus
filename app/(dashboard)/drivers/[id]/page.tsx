@@ -22,8 +22,11 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
     redirect("/login")
   }
 
-  const driverId = Number.parseInt(params.id)
-  if (isNaN(driverId)) {
+  const driverId = params.id
+
+  // Basic UUID validation
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(driverId)) {
     notFound()
   }
 
@@ -41,7 +44,6 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
     notFound()
   }
 
-  // Get current vehicle assignments
   const { data: currentAssignments } = await supabase
     .from("vehicle_assignments")
     .select(`
@@ -54,7 +56,7 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
         vehicle_number
       )
     `)
-    .eq("driver_id", driverId)
+    .eq("driver_id", driver.user_id)
     .eq("is_active", true)
 
   // Get assignment history
@@ -71,18 +73,17 @@ export default async function DriverDetailPage({ params }: DriverDetailPageProps
       ),
       assigned_by_user:users!vehicle_assignments_assigned_by_fkey(name)
     `)
-    .eq("driver_id", driverId)
+    .eq("driver_id", driver.user_id)
     .order("assigned_at", { ascending: false })
     .limit(20)
 
-  // Get refuel records for this driver
   const { data: refuelRecords } = await supabase
     .from("refuel_records")
     .select(`
       *,
       vehicle:vehicles(license_plate, make, model)
     `)
-    .eq("driver_id", driverId)
+    .eq("driver_id", driver.id)
     .order("refuel_date", { ascending: false })
     .limit(20)
 

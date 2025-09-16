@@ -67,6 +67,8 @@ export default async function RefuelDetailPage({ params }: RefuelDetailPageProps
 
   const formatVehicleNumber = (vehicleNumber?: string) => {
     if (!vehicleNumber) return ""
+    if (!/^\d+$/.test(vehicleNumber)) return vehicleNumber
+
     const num = Number.parseInt(vehicleNumber)
     if (num >= 1 && num <= 9) {
       return `0${num}`
