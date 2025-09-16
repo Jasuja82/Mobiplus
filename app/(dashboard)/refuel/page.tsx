@@ -30,24 +30,24 @@ export default async function RefuelPage() {
 
   const { data: drivers } = await supabase
     .from("drivers")
-    .select("id, name, internal_number")
-    .eq("status", "active")
-    .order("name")
+    .select("id, full_name, code")
+    .eq("is_active", true)
+    .order("full_name")
 
   if (error) {
     console.error("Error fetching refuel records:", error.message)
   }
 
-  // Get statistics for current month
+  // Get statistics for current month using the new table structure
   const currentMonth = new Date()
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
 
   const { data: monthlyStats } = await supabase
     .from("refuel_records")
-    .select("total_cost, liters")
-    .gte("refuel_date", firstDayOfMonth.toISOString())
+    .select("calculatedTotalLiterCost, liters")
+    .gte("data", firstDayOfMonth.toISOString().split("T")[0])
 
-  const totalCost = monthlyStats?.reduce((sum, record) => sum + record.total_cost, 0) || 0
+  const totalCost = monthlyStats?.reduce((sum, record) => sum + (record.calculatedTotalLiterCost || 0), 0) || 0
   const totalLiters = monthlyStats?.reduce((sum, record) => sum + record.liters, 0) || 0
   const averageCostPerLiter = totalLiters > 0 ? totalCost / totalLiters : 0
 
